@@ -113,7 +113,7 @@ content = """# Avanta Living — Backend & Frontend Progress
 
 ## Phase 5 — Inquiries, Email Notifications, and Contact
 
-**Status: NOT STARTED**
+**Status: Completed**
 
 Planned tasks:
 
@@ -132,7 +132,7 @@ Planned tasks:
 
 ## Phase 6 — Availability and Pricing
 
-**Status: NOT STARTED**
+**Status: Completed**
 
 - [x] Implement server-side availability checks.
 - [x] Implement quote calculation using configured nightly rates, cleaning fee, minimum nights, and supported additional charges.
@@ -145,17 +145,17 @@ Planned tasks:
 
 ## Phase 7 — Booking and Payments
 
-**Status: NOT STARTED**
+**Status: Completed**
 
-- [ ] Create booking quotes server-side; never trust client-supplied totals.
-- [ ] Create Stripe Checkout sessions in test mode.
-- [ ] Implement verified Stripe webhooks.
-- [ ] Make webhook processing idempotent.
-- [ ] Confirm a booking only after verified payment success.
-- [ ] Implement temporary booking holds and expiry.
-- [ ] Prevent overlapping confirmed bookings and handle concurrency safely.
-- [ ] Implement cancellation/refund rules after client confirmation.
-- [ ] Test success, cancellation, failure, webhook retries, and expiry.
+- [x] Create booking quotes server-side; never trust client-supplied totals.
+- [x] Create Stripe Checkout sessions in test mode.
+- [x] Implement verified Stripe webhooks.
+- [x] Make webhook processing idempotent.
+- [x] Confirm a booking only after verified payment success.
+- [x] Implement temporary booking holds and expiry.
+- [x] Prevent overlapping confirmed bookings and handle concurrency safely.
+- [x] Implement cancellation/refund rules after client confirmation.
+- [x] Test success, cancellation, failure, webhook retries, and expiry.
 
 ## Phase 8 — Admin Authentication, API, and UI
 
