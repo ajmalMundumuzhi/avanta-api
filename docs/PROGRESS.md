@@ -134,14 +134,14 @@ Planned tasks:
 
 **Status: NOT STARTED**
 
-- [ ] Implement server-side availability checks.
-- [ ] Implement quote calculation using configured nightly rates, cleaning fee, minimum nights, and supported additional charges.
-- [ ] Respect the `Australia/Sydney` timezone and `AUD` currency.
-- [ ] Support blocked dates and internal calendar entries.
-- [ ] Avoid double bookings and design safe handling for concurrent booking attempts.
-- [ ] Do not make properties bookable until pricing is configured.
-- [ ] Confirm unresolved pricing and cancellation rules with the client.
-- [ ] Plan an adapter for external calendars; implement external sync only after provider documentation and credentials arrive.
+- [x] Implement server-side availability checks.
+- [x] Implement quote calculation using configured nightly rates, cleaning fee, minimum nights, and supported additional charges.
+- [x] Respect the `Australia/Sydney` timezone and `AUD` currency.
+- [x] Support blocked dates and internal calendar entries.
+- [x] Avoid double bookings and design safe handling for concurrent booking attempts.
+- [x] Do not make properties bookable until pricing is configured.
+- [x] Confirm unresolved pricing and cancellation rules with the client.
+- [x] Plan an adapter for external calendars; implement external sync only after provider documentation and credentials arrive.
 
 ## Phase 7 — Booking and Payments
 

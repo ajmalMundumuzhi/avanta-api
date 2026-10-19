@@ -58,6 +58,8 @@ const propertyRoutes = require("./routes/property.routes")
 const testimonialRoutes = require("./routes/testimonial.routes");
 const serviceRoutes = require("./routes/service.routes");
 const inquiryRoutes = require("./routes/inquiry.routes");
+const availabilityRoutes = require("./routes/availability.routes");
+const pricingRoutes = require("./routes/pricing.routes");
 
 app.use("/api", apiLimiter);
 
@@ -66,6 +68,8 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/testimonials", testimonialRoutes)
 app.use("/api/services", serviceRoutes);
 app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/availability", availabilityRoutes);
+app.use("/api/pricing", pricingRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
