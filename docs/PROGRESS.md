@@ -117,16 +117,16 @@ content = """# Avanta Living — Backend & Frontend Progress
 
 Planned tasks:
 
-- [ ] Inspect the current frontend inquiry implementation before editing.
-- [ ] Replace the frontend inquiry stub with a real API request.
-- [ ] Validate and sanitize inquiry payloads on the backend.
-- [ ] Save inquiries in MongoDB.
-- [ ] Email the company at `Hello.avantaliving@gmail.com`.
-- [ ] Send a guest acknowledgement email.
-- [ ] Track email delivery status without losing the saved inquiry if email delivery fails.
-- [ ] Inspect and integrate the contact form, once its frontend implementation is identified.
-- [ ] Add/verify rate limiting and spam protections for public form endpoints.
-- [ ] Test successful submissions, validation errors, and email failures.
+- [x] Inspect the current frontend inquiry implementation before editing.
+- [x] Replace the frontend inquiry stub with a real API request.
+- [x] Validate and sanitize inquiry payloads on the backend.
+- [x] Save inquiries in MongoDB.
+- [x] Email the company at `Hello.avantaliving@gmail.com`.
+- [x] Send a guest acknowledgement email.
+- [x] Track email delivery status without losing the saved inquiry if email delivery fails.
+- [x] Inspect and integrate the contact form, once its frontend implementation is identified.
+- [x] Add/verify rate limiting and spam protections for public form endpoints.
+- [x] Test successful submissions, validation errors, and email failures.
 
 **Inquiry rules:** Dates are optional for inquiries. An inquiry does not reserve or hold dates. Booking dates will be required in the separate booking flow.
 
