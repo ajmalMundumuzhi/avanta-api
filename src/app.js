@@ -55,11 +55,13 @@ const apiLimiter = rateLimit({
 });
 
 const propertyRoutes = require("./routes/property.routes")
+const testimonialRoutes = require("./routes/testimonial.routes");
 
 app.use("/api", apiLimiter);
 
 app.use("/api/health", healthRoutes);
 app.use("/api/properties", propertyRoutes);
+app.use("/api/testimonials", testimonialRoutes)
 
 app.use(notFoundHandler);
 app.use(errorHandler);
