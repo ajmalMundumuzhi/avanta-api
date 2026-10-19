@@ -1,9 +1,13 @@
 
 const express = require("express");
-const { getProperties } = require("../controller/property.controller");
+const { 
+    getProperties,
+    getPropertyById,
+} = require("../controller/property.controller");
 
 const router = express.Router();
 
 router.get("/", getProperties);
+router.get("/:id", getPropertyById);
 
 module.exports = router;

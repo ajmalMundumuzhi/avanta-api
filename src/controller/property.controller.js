@@ -115,6 +115,45 @@ const getProperties = async (req, res, next) => {
   }
 };
 
+
+const getPropertyById = async (req, res, next) => {
+  try {
+    const propertyId = req.params.id.trim();
+
+    if (!propertyId) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "A valid property ID is required."
+        }
+      });
+    }
+
+    const property = await Property.findOne({
+      propertyId,
+      isActive: true,
+      isPlaceholder: false
+    }).select("-createdBy -updatedBy -__v");
+
+    if (!property) {
+      return res.status(404).json({
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "The requested property was not found."
+        }
+      });
+    }
+
+    return res.status(200).json({
+      data: property
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 module.exports = {
-  getProperties
+  getProperties,
+  getPropertyById,
 };
