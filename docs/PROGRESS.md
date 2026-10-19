@@ -52,3 +52,45 @@ Status: Implementation prepared; checkpoint tests pending.
 - Final cancellation and refund rules.
 - SMTP configuration and verified sender.
 - Production hosting and domain.
+
+
+## Phase 3 — Public APIs
+
+Status: Complete after final API tests pass.
+
+Implemented:
+- GET /api/health
+- GET /api/properties
+- GET /api/properties/:id
+- GET /api/testimonials
+- GET /api/services
+
+Property listing features:
+- Pagination
+- Guest-capacity filtering
+- Bedroom filtering
+- Featured filtering
+- Sorting
+- Placeholder listings excluded from public results
+
+Property details:
+- Existing string property IDs preserved
+- Inactive and placeholder listings return 404
+- Missing property returns a structured error
+
+Testimonials:
+- Published, non-placeholder testimonials only
+
+Services:
+- Published service cards only
+
+Validation:
+- [x] Health endpoint
+- [x] Property listing
+- [x] Property details
+- [x] Testimonials
+- [x] Services
+- [x] Unknown property returns 404
+- [x] Invalid pagination returns 400
+
+Next: Phase 4 — Frontend Integration
