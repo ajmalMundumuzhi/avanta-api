@@ -27,14 +27,14 @@ Status: Decisions confirmed; external API and pricing details pending.
 ## Phase 1 — Backend scaffold
 Status: Implementation prepared; checkpoint tests pending.
 
-- [ ] Install dependencies
-- [ ] Configure environment variables
-- [ ] Verify Express server startup
-- [ ] Verify GET /api/health
-- [ ] Verify 404 and error responses
-- [ ] Configure MongoDB Atlas
-- [ ] Verify database connectivity
-- [ ] Verify Git ignores secrets
+- [x] Install dependencies
+- [x] Configure environment variables
+- [x] Verify Express server startup
+- [x] Verify GET /api/health
+- [x] Verify 404 and error responses
+- [x] Configure MongoDB Atlas
+- [x] Verify database connectivity
+- [x] Verify Git ignores secrets
 
 ## Phase 1 decisions
 - CommonJS module system.
