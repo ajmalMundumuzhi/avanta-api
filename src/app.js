@@ -21,6 +21,7 @@ const adminBookingRoutes = require("./routes/adminBooking.routes");
 const adminAvailabilityRoutes = require("./routes/adminAvailability.routes");
 const adminInquiryRoutes = require("./routes/adminInquiry.routes");
 const adminSettingsRoutes = require("./routes/adminSettings.routes");
+const adminPropertyUploadRoutes = require("./routes/adminPropertyUpload.routes");
 
 const {
   notFoundHandler,
@@ -92,7 +93,8 @@ app.use("/api/admin/bookings", adminBookingRoutes);
 app.use("/api/admin/availability", adminAvailabilityRoutes);
 app.use("/api/admin/inquiries", adminInquiryRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
-
+app.use("/api/admin/properties", adminPropertyUploadRoutes);
+app.use("/api/admin/properties", adminPropertyRoutes);
 app.use("/api/payments", paymentRoutes);
 
 app.use(notFoundHandler);
