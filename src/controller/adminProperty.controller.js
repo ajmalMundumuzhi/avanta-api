@@ -16,6 +16,14 @@ async function generatePropertyId() {
   throw new Error("Could not generate a unique property ID.");
 }
 
+function isPricingConfigured(pricing) {
+  return (
+    Number.isFinite(Number(pricing?.nightlyRate)) &&
+    Number(pricing.nightlyRate) > 0 &&
+    Number.isFinite(Number(pricing?.minNights)) &&
+    Number(pricing.minNights) >= 1
+  );
+}
 
 exports.getProperties = async (req, res, next) => {
   try {
@@ -91,14 +99,30 @@ exports.getProperty = async (req, res, next) => {
 };
 
 
+
+function isPricingConfigured(pricing) {
+  const nightlyRate = Number(pricing?.nightlyRate);
+  const minNights = Number(pricing?.minNights);
+
+  return (
+    pricing?.nightlyRate !== null &&
+    pricing?.nightlyRate !== undefined &&
+    pricing?.nightlyRate !== "" &&
+    Number.isFinite(nightlyRate) &&
+    nightlyRate > 0 &&
+    Number.isFinite(minNights) &&
+    minNights >= 1
+  );
+}
+
 exports.createProperty = async (req, res, next) => {
   try {
     const payload = { ...req.body };
 
-    // Never accept a manually supplied property ID or audit identity.
     delete payload.propertyId;
     delete payload.createdBy;
     delete payload.updatedBy;
+    delete payload.pricingConfigured;
 
     payload.propertyId = await generatePropertyId();
     payload.createdBy = req.admin._id;
@@ -112,6 +136,8 @@ exports.createProperty = async (req, res, next) => {
         .replace(/^-|-$/g, "");
     }
 
+    payload.pricingConfigured = isPricingConfigured(payload.pricing);
+
     const property = await Property.create(payload);
 
     res.status(201).json({
@@ -124,6 +150,7 @@ exports.createProperty = async (req, res, next) => {
       error.code = "DUPLICATE_PROPERTY";
       error.message = "A property with this identifier already exists.";
     }
+
     next(error);
   }
 };
@@ -141,12 +168,31 @@ exports.updateProperty = async (req, res, next) => {
     }
 
     const allowedFields = [
-      "title", "location", "address", "city", "state", "country",
-      "description", "images", "guests", "bedrooms", "bathrooms",
-      "amenities", "amenityGroups", "pricing", "cancellationPolicy",
-      "houseRules", "checkInTime", "checkOutTime", "timezone",
-      "isActive", "isFeatured", "isPlaceholder", "sortOrder",
-      "pricingConfigured", "rating", "reviewCount",
+      "title",
+      "location",
+      "address",
+      "city",
+      "state",
+      "country",
+      "description",
+      "images",
+      "guests",
+      "bedrooms",
+      "bathrooms",
+      "amenities",
+      "amenityGroups",
+      "pricing",
+      "cancellationPolicy",
+      "houseRules",
+      "checkInTime",
+      "checkOutTime",
+      "timezone",
+      "isActive",
+      "isFeatured",
+      "isPlaceholder",
+      "sortOrder",
+      "rating",
+      "reviewCount",
     ];
 
     const payload = {};
@@ -165,15 +211,9 @@ exports.updateProperty = async (req, res, next) => {
         .replace(/^-|-$/g, "");
     }
 
-    payload.updatedBy = req.admin._id;
+    const existingProperty = await Property.findById(req.params.id);
 
-    const property = await Property.findByIdAndUpdate(
-      req.params.id,
-      { $set: payload },
-      { new: true, runValidators: true }
-    );
-
-    if (!property) {
+    if (!existingProperty) {
       return res.status(404).json({
         success: false,
         error: {
@@ -182,6 +222,25 @@ exports.updateProperty = async (req, res, next) => {
         },
       });
     }
+
+    const finalPricing = payload.pricing
+      ? {
+          ...(existingProperty.pricing?.toObject?.() ||
+            existingProperty.pricing?.toJSON?.() ||
+            existingProperty.pricing ||
+            {}),
+          ...payload.pricing,
+        }
+      : existingProperty.pricing;
+
+    payload.pricingConfigured = isPricingConfigured(finalPricing);
+    payload.updatedBy = req.admin._id;
+
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      { $set: payload },
+      { returnDocument: "after", runValidators: true }
+    );
 
     res.status(200).json({
       success: true,
@@ -215,7 +274,7 @@ exports.toggleProperty = async (req, res, next) => {
     const property = await Property.findByIdAndUpdate(
       req.params.id,
       { $set: { isActive: req.body.isActive } },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!property) {
