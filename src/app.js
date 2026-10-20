@@ -14,6 +14,8 @@ const pricingRoutes = require("./routes/pricing.routes");
 const bookingRoutes = require("./routes/booking.routes");
 const paymentRoutes = require("./routes/payment.routes");
 const stripeWebhookRoutes = require("./routes/stripeWebhook.routes");
+const adminAuthRoutes = require("./routes/adminAuth.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 const {
   notFoundHandler,
@@ -78,6 +80,8 @@ app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/pricing", pricingRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use("/api/payments", paymentRoutes);
 
