@@ -35,7 +35,7 @@ app.disable("x-powered-by");
 app.use(helmet());
 
 const allowedOrigins = (
-  process.env.CLIENT_URL || "http://localhost:5173"
+  process.env.CLIENT_URL
 )
   .split(",")
   .map((origin) => origin.trim())
@@ -94,7 +94,6 @@ app.use("/api/admin/availability", adminAvailabilityRoutes);
 app.use("/api/admin/inquiries", adminInquiryRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
 app.use("/api/admin/properties", adminPropertyUploadRoutes);
-app.use("/api/admin/properties", adminPropertyRoutes);
 app.use("/api/payments", paymentRoutes);
 
 app.use(notFoundHandler);
