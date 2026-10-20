@@ -37,11 +37,98 @@ function parseOptionalDate(value, field, errors) {
   return date;
 }
 
+async function sendInquiryEmails({
+  inquiryId,
+  companyEmail,
+  guestEmail,
+  propertyTitle,
+  propertyId,
+  guest,
+  checkin,
+  checkout,
+  guests,
+  marketingOptIn,
+}) {
+  const guestName = `${guest.firstName} ${guest.lastName}`;
+
+  const dateText =
+    checkin && checkout
+      ? `Check-in: ${checkin.toISOString().slice(0, 10)}\nCheck-out: ${checkout.toISOString().slice(0, 10)}`
+      : "Dates: Not specified";
+
+  const companyText = [
+    "A new property inquiry has been received.",
+    "",
+    `Inquiry ID: ${inquiryId}`,
+    `Property ID: ${propertyId}`,
+    `Property: ${propertyTitle}`,
+    `Guest: ${guestName}`,
+    `Email: ${guest.email}`,
+    `Phone: ${guest.dialCode} ${guest.phone}`,
+    `Address: ${guest.address}, ${guest.city}, ${guest.state} ${guest.zip}, ${guest.country}`,
+    dateText,
+    `Guests: ${guests}`,
+    `Message: ${guest.message || "No message provided"}`,
+    `Marketing opt-in: ${marketingOptIn ? "Yes" : "No"}`,
+  ].join("\n");
+
+  const guestText = [
+    `Hi ${guest.firstName},`,
+    "",
+    "Thank you for contacting Avanta Living.",
+    "We've received your inquiry and our team will review it and get back to you.",
+    "",
+    `Property: ${propertyTitle}`,
+    `Property ID: ${propertyId}`,
+    dateText,
+    "",
+    "This is an inquiry acknowledgement, not a booking confirmation. Your dates have not been reserved.",
+    "",
+    "Kind regards,",
+    "Avanta Living",
+  ].join("\n");
+
+  const emailResults = await Promise.allSettled([
+    sendEmail({
+      to: companyEmail,
+      subject: `New property inquiry — ${propertyTitle}`,
+      text: companyText,
+    }),
+    sendEmail({
+      to: guestEmail,
+      subject: "We've received your Avanta Living inquiry",
+      text: guestText,
+    }),
+  ]);
+
+  const allEmailsSent = emailResults.every(
+    (result) => result.status === "fulfilled"
+  );
+
+  const emailStatus = allEmailsSent ? "sent" : "failed";
+
+  if (!allEmailsSent) {
+    console.error(
+      "Inquiry email delivery failed:",
+      emailResults
+        .map((result) =>
+          result.status === "rejected"
+            ? result.reason?.message || "Unknown email error"
+            : null
+        )
+        .filter(Boolean)
+    );
+  }
+
+  await Inquiry.findByIdAndUpdate(inquiryId, { emailStatus });
+
+  console.log(`Inquiry ${inquiryId}: email status ${emailStatus}`);
+}
+
 async function createInquiry(req, res, next) {
   try {
     const body = req.body || {};
     const guest = body.guest;
-
     const errors = {};
 
     if (
@@ -106,7 +193,8 @@ async function createInquiry(req, res, next) {
           (typeof guest[field] !== "string" ||
             guest[field].length > max)
         ) {
-          errors[field] = `${field} must be a string with at most ${max} characters.`;
+          errors[field] =
+            `${field} must be a string with at most ${max} characters.`;
         }
       }
     }
@@ -115,7 +203,8 @@ async function createInquiry(req, res, next) {
     const checkout = parseOptionalDate(body.checkout, "checkout", errors);
 
     if (Boolean(body.checkin) !== Boolean(body.checkout)) {
-      errors.dates = "Provide both check-in and check-out dates, or neither.";
+      errors.dates =
+        "Provide both check-in and check-out dates, or neither.";
     }
 
     if (checkin && checkout && checkout <= checkin) {
@@ -125,7 +214,8 @@ async function createInquiry(req, res, next) {
     const guests = Number(body.guests);
 
     if (!Number.isInteger(guests) || guests < 1 || guests > 100) {
-      errors.guests = "Guest count must be a whole number between 1 and 100.";
+      errors.guests =
+        "Guest count must be a whole number between 1 and 100.";
     }
 
     if (
@@ -170,122 +260,83 @@ async function createInquiry(req, res, next) {
       );
     }
 
-    
     const inquiry = await Inquiry.create({
-        property: property._id,
-        propertyId: property.propertyId,
-        guest: {
-            firstName: guest.firstName.trim(),
-            lastName: guest.lastName.trim(),
-            email: guest.email.trim().toLowerCase(),
-            dialCode: guest.dialCode?.trim() || "+61",
-            phone: guest.phone.trim(),
-            address: guest.address.trim(),
-            address2: guest.address2?.trim() || "",
-            city: guest.city.trim(),
-            zip: guest.zip.trim(),
-            state: guest.state?.trim() || "",
-            country: guest.country.trim(),
-            message: guest.message?.trim() || "",
-        },
-        checkin,
-        checkout,
-        guests,
-        marketingOptIn: body.marketing === true,
-        status: "new",
-        ip: req.ip || null,
-        userAgent: req.get("user-agent")?.slice(0, 500) || null,
-        emailStatus: "pending",
-        });
+      property: property._id,
+      propertyId: property.propertyId,
+      guest: {
+        firstName: guest.firstName.trim(),
+        lastName: guest.lastName.trim(),
+        email: guest.email.trim().toLowerCase(),
+        dialCode: guest.dialCode?.trim() || "+61",
+        phone: guest.phone.trim(),
+        address: guest.address.trim(),
+        address2: guest.address2?.trim() || "",
+        city: guest.city.trim(),
+        zip: guest.zip.trim(),
+        state: guest.state?.trim() || "",
+        country: guest.country.trim(),
+        message: guest.message?.trim() || "",
+      },
+      checkin,
+      checkout,
+      guests,
+      marketingOptIn: body.marketing === true,
+      status: "new",
+      ip: req.ip || null,
+      userAgent: req.get("user-agent")?.slice(0, 500) || null,
+      emailStatus: "pending",
+    });
 
-        const companyEmail =
-        process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
+    const companyEmail =
+      process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
 
-        const guestName =
-        `${inquiry.guest.firstName} ${inquiry.guest.lastName}`;
+    // Respond immediately after the inquiry is saved.
+    res.status(201).json({
+      data: {
+        id: inquiry._id,
+        propertyId: inquiry.propertyId,
+        status: inquiry.status,
+        emailStatus: inquiry.emailStatus,
+        createdAt: inquiry.createdAt,
+      },
+    });
 
-        const dateText =
-        inquiry.checkin && inquiry.checkout
-            ? `Check-in: ${inquiry.checkin.toISOString().slice(0, 10)}\nCheck-out: ${inquiry.checkout.toISOString().slice(0, 10)}`
-            : "Dates: Not specified";
-
-        const companyText = [
-        "A new property inquiry has been received.",
-        "",
-        `Inquiry ID: ${inquiry._id}`,
-        `Property ID: ${inquiry.propertyId}`,
-        `Property: ${property.title}`,
-        `Guest: ${guestName}`,
-        `Email: ${inquiry.guest.email}`,
-        `Phone: ${inquiry.guest.dialCode} ${inquiry.guest.phone}`,
-        `Address: ${inquiry.guest.address}, ${inquiry.guest.city}, ${inquiry.guest.state} ${inquiry.guest.zip}, ${inquiry.guest.country}`,
-        dateText,
-        `Guests: ${inquiry.guests}`,
-        `Message: ${inquiry.guest.message || "No message provided"}`,
-        `Marketing opt-in: ${inquiry.marketingOptIn ? "Yes" : "No"}`,
-        ].join("\n");
-
-        const guestText = [
-        `Hi ${inquiry.guest.firstName},`,
-        "",
-        "Thank you for contacting Avanta Living.",
-        "We've received your inquiry and our team will review it and get back to you.",
-        "",
-        `Property: ${property.title}`,
-        `Property ID: ${inquiry.propertyId}`,
-        dateText,
-        "",
-        "This is an inquiry acknowledgement, not a booking confirmation. Your dates have not been reserved.",
-        "",
-        "Kind regards,",
-        "Avanta Living",
-        ].join("\n");
-
-        const emailResults = await Promise.allSettled([
-        sendEmail({
-            to: companyEmail,
-            subject: `New property inquiry — ${property.title}`,
-            text: companyText,
-        }),
-        sendEmail({
-            to: inquiry.guest.email,
-            subject: "We've received your Avanta Living inquiry",
-            text: guestText,
-        }),
-        ]);
-
-        const allEmailsSent = emailResults.every(
-        (result) => result.status === "fulfilled"
-        );
-
-        inquiry.emailStatus = allEmailsSent ? "sent" : "failed";
-        await inquiry.save();
-
-        if (!allEmailsSent) {
+    // Send notifications after the response. SMTP delays won't keep
+    // the customer's submit button waiting for the emails.
+    setImmediate(() => {
+      sendInquiryEmails({
+        inquiryId: inquiry._id,
+        companyEmail,
+        guestEmail: inquiry.guest.email,
+        propertyTitle: property.title,
+        propertyId: inquiry.propertyId,
+        guest: inquiry.guest,
+        checkin: inquiry.checkin,
+        checkout: inquiry.checkout,
+        guests: inquiry.guests,
+        marketingOptIn: inquiry.marketingOptIn,
+      }).catch((error) => {
         console.error(
-            "Inquiry email delivery failed:",
-            emailResults
-            .map((result) =>
-                result.status === "rejected"
-                ? result.reason?.message || "Unknown email error"
-                : null
-            )
-            .filter(Boolean)
+          `Failed to process emails for inquiry ${inquiry._id}:`,
+          error
         );
-        }
 
-        return res.status(201).json({
-        data: {
-            id: inquiry._id,
-            propertyId: inquiry.propertyId,
-            status: inquiry.status,
-            emailStatus: inquiry.emailStatus,
-            createdAt: inquiry.createdAt,
-        },
+        Inquiry.findByIdAndUpdate(inquiry._id, {
+          emailStatus: "failed",
+        }).catch((updateError) => {
+          console.error(
+            "Failed to update inquiry email status:",
+            updateError
+          );
         });
-
+      });
+    });
   } catch (error) {
-    next(error);
+    if (res.headersSent) {
+      return next(error);
+    }
+
+    return next(error);
   }
 }
 
