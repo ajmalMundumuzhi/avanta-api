@@ -17,6 +17,7 @@ const stripeWebhookRoutes = require("./routes/stripeWebhook.routes");
 const adminAuthRoutes = require("./routes/adminAuth.routes");
 const adminRoutes = require("./routes/admin.routes");
 const adminPropertyRoutes = require("./routes/adminProperty.routes");
+const adminBookingRoutes = require("./routes/adminBooking.routes");
 
 const {
   notFoundHandler,
@@ -84,6 +85,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/properties", adminPropertyRoutes);
+app.use("/api/admin/bookings", adminBookingRoutes);
 
 app.use("/api/payments", paymentRoutes);
 
