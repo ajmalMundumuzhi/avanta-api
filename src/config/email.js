@@ -24,7 +24,7 @@ const transporter = smtpConfigured
     })
   : null;
 
-async function sendEmail({ to, subject, text, html }) {
+async function sendEmail({ to, subject, text, html, replyTo }) {
   if (!transporter) {
     throw new Error("SMTP is not configured.");
   }
@@ -35,6 +35,7 @@ async function sendEmail({ to, subject, text, html }) {
     subject,
     text,
     html,
+    ...(replyTo ? { replyTo } : {}),
   });
 }
 

@@ -1,10 +1,11 @@
+
 const { sendEmail } = require("../config/email");
 
 async function submitContact(req, res, next) {
   try {
     const { name, email, subject, message, website } = req.body || {};
 
-    // Silently ignore submissions caught by the frontend spam trap.
+    // Silently ignore submissions caught by the spam trap.
     if (website) {
       return res.status(200).json({
         success: true,
@@ -12,6 +13,7 @@ async function submitContact(req, res, next) {
       });
     }
 
+    // Validate required fields.
     if (
       typeof name !== "string" ||
       !name.trim() ||
@@ -28,10 +30,12 @@ async function submitContact(req, res, next) {
       });
     }
 
+    // Validate field lengths.
     if (
       name.length > 100 ||
       email.length > 254 ||
-      (typeof subject === "string" && subject.length > 200) ||
+      (subject !== undefined &&
+        (typeof subject !== "string" || subject.length > 200)) ||
       message.length > 5000
     ) {
       return res.status(400).json({
@@ -45,31 +49,45 @@ async function submitContact(req, res, next) {
     const recipient =
       process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
 
-    await sendEmail({
-      to: recipient,
-      replyTo: email.trim(),
-      subject: `Website contact: ${
-        typeof subject === "string" && subject.trim()
-          ? subject.trim()
-          : "General enquiry"
-      }`,
-      text: [
-        "A new contact form message was received.",
-        "",
-        `Name: ${name.trim()}`,
-        `Email: ${email.trim()}`,
-        `Subject: ${subject || "General enquiry"}`,
-        "",
-        "Message:",
-        message.trim(),
-      ].join("\n"),
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const cleanSubject =
+      typeof subject === "string" && subject.trim()
+        ? subject.trim()
+        : "General enquiry";
+    const cleanMessage = message.trim();
+
+    // Respond immediately, without waiting for SMTP.
+    res.status(200).json({
+      success: true,
+      message: "Your message has been received.",
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Your message has been sent successfully.",
+    // Attempt email delivery in the background.
+    setImmediate(() => {
+      sendEmail({
+        to: recipient,
+        replyTo: cleanEmail,
+        subject: `Website contact: ${cleanSubject}`,
+        text: [
+          "A new contact form message was received.",
+          "",
+          `Name: ${cleanName}`,
+          `Email: ${cleanEmail}`,
+          `Subject: ${cleanSubject}`,
+          "",
+          "Message:",
+          cleanMessage,
+        ].join("\n"),
+      }).catch((error) => {
+        console.error("Contact email delivery failed:", error);
+      });
     });
   } catch (error) {
+    if (res.headersSent) {
+      return next(error);
+    }
+
     return next(error);
   }
 }
