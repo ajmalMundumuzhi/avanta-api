@@ -1,3 +1,4 @@
+
 const { sendEmail } = require("../config/email");
 const Inquiry = require("../models/Inquiry");
 const Property = require("../models/Property");
@@ -65,7 +66,7 @@ async function sendInquiryEmails({
     `Guest: ${guestName}`,
     `Email: ${guest.email}`,
     `Phone: ${guest.dialCode} ${guest.phone}`,
-    `Address: ${guest.address}, ${guest.city}, ${guest.state} ${guest.zip}, ${guest.country}`,
+    `Travelling from: ${guest.city}, ${guest.state || ""}, ${guest.country}`,
     dateText,
     `Guests: ${guests}`,
     `Message: ${guest.message || "No message provided"}`,
@@ -148,9 +149,7 @@ async function createInquiry(req, res, next) {
       "lastName",
       "email",
       "phone",
-      "address",
       "city",
-      "zip",
       "country",
     ];
 
@@ -177,10 +176,7 @@ async function createInquiry(req, res, next) {
         lastName: 100,
         email: 254,
         phone: 30,
-        address: 200,
-        address2: 200,
         city: 100,
-        zip: 20,
         state: 100,
         country: 100,
         message: 3000,
@@ -269,10 +265,7 @@ async function createInquiry(req, res, next) {
         email: guest.email.trim().toLowerCase(),
         dialCode: guest.dialCode?.trim() || "+61",
         phone: guest.phone.trim(),
-        address: guest.address.trim(),
-        address2: guest.address2?.trim() || "",
         city: guest.city.trim(),
-        zip: guest.zip.trim(),
         state: guest.state?.trim() || "",
         country: guest.country.trim(),
         message: guest.message?.trim() || "",
@@ -290,7 +283,6 @@ async function createInquiry(req, res, next) {
     const companyEmail =
       process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
 
-    // Respond immediately after the inquiry is saved.
     res.status(201).json({
       data: {
         id: inquiry._id,
@@ -301,8 +293,6 @@ async function createInquiry(req, res, next) {
       },
     });
 
-    // Send notifications after the response. SMTP delays won't keep
-    // the customer's submit button waiting for the emails.
     setImmediate(() => {
       sendInquiryEmails({
         inquiryId: inquiry._id,

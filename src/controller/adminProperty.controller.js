@@ -2,7 +2,6 @@
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
 
-
 async function generatePropertyId() {
   for (let attempt = 0; attempt < 10; attempt++) {
     const id = String(
@@ -10,6 +9,7 @@ async function generatePropertyId() {
     );
 
     const exists = await Property.exists({ propertyId: id });
+
     if (!exists) return id;
   }
 
@@ -17,17 +17,27 @@ async function generatePropertyId() {
 }
 
 function isPricingConfigured(pricing) {
+  const nightlyRate = Number(pricing?.nightlyRate);
+  const minNights = Number(pricing?.minNights);
+
   return (
-    Number.isFinite(Number(pricing?.nightlyRate)) &&
-    Number(pricing.nightlyRate) > 0 &&
-    Number.isFinite(Number(pricing?.minNights)) &&
-    Number(pricing.minNights) >= 1
+    pricing?.nightlyRate !== null &&
+    pricing?.nightlyRate !== undefined &&
+    pricing?.nightlyRate !== "" &&
+    Number.isFinite(nightlyRate) &&
+    nightlyRate > 0 &&
+    Number.isFinite(minNights) &&
+    minNights >= 1
   );
 }
 
 exports.getProperties = async (req, res, next) => {
   try {
-    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const page = Math.max(
+      1,
+      Number.parseInt(req.query.page, 10) || 1
+    );
+
     const limit = Math.min(
       100,
       Math.max(1, Number.parseInt(req.query.limit, 10) || 20)
@@ -37,6 +47,7 @@ exports.getProperties = async (req, res, next) => {
 
     if (req.query.search?.trim()) {
       const search = req.query.search.trim();
+
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
         { title: { $regex: search, $options: "i" } },
@@ -54,10 +65,11 @@ exports.getProperties = async (req, res, next) => {
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
+
       Property.countDocuments(filter),
     ]);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         properties,
@@ -79,7 +91,10 @@ exports.getProperty = async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({
         success: false,
-        error: { code: "INVALID_PROPERTY_ID", message: "Invalid property ID." },
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
       });
     }
 
@@ -88,32 +103,21 @@ exports.getProperty = async (req, res, next) => {
     if (!property) {
       return res.status(404).json({
         success: false,
-        error: { code: "PROPERTY_NOT_FOUND", message: "Property not found." },
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
       });
     }
 
-    res.status(200).json({ success: true, data: { property } });
+    return res.status(200).json({
+      success: true,
+      data: { property },
+    });
   } catch (error) {
     next(error);
   }
 };
-
-
-
-function isPricingConfigured(pricing) {
-  const nightlyRate = Number(pricing?.nightlyRate);
-  const minNights = Number(pricing?.minNights);
-
-  return (
-    pricing?.nightlyRate !== null &&
-    pricing?.nightlyRate !== undefined &&
-    pricing?.nightlyRate !== "" &&
-    Number.isFinite(nightlyRate) &&
-    nightlyRate > 0 &&
-    Number.isFinite(minNights) &&
-    minNights >= 1
-  );
-}
 
 exports.createProperty = async (req, res, next) => {
   try {
@@ -136,11 +140,13 @@ exports.createProperty = async (req, res, next) => {
         .replace(/^-|-$/g, "");
     }
 
-    payload.pricingConfigured = isPricingConfigured(payload.pricing);
+    payload.pricingConfigured = isPricingConfigured(
+      payload.pricing
+    );
 
     const property = await Property.create(payload);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: { property },
     });
@@ -198,7 +204,9 @@ exports.updateProperty = async (req, res, next) => {
     const payload = {};
 
     for (const field of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      if (
+        Object.prototype.hasOwnProperty.call(req.body, field)
+      ) {
         payload[field] = req.body[field];
       }
     }
@@ -211,7 +219,9 @@ exports.updateProperty = async (req, res, next) => {
         .replace(/^-|-$/g, "");
     }
 
-    const existingProperty = await Property.findById(req.params.id);
+    const existingProperty = await Property.findById(
+      req.params.id
+    );
 
     if (!existingProperty) {
       return res.status(404).json({
@@ -233,16 +243,22 @@ exports.updateProperty = async (req, res, next) => {
         }
       : existingProperty.pricing;
 
-    payload.pricingConfigured = isPricingConfigured(finalPricing);
+    payload.pricingConfigured = isPricingConfigured(
+      finalPricing
+    );
+
     payload.updatedBy = req.admin._id;
 
     const property = await Property.findByIdAndUpdate(
       req.params.id,
       { $set: payload },
-      { returnDocument: "after", runValidators: true }
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { property },
     });
@@ -251,13 +267,15 @@ exports.updateProperty = async (req, res, next) => {
   }
 };
 
-
 exports.toggleProperty = async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({
         success: false,
-        error: { code: "INVALID_PROPERTY_ID", message: "Invalid property ID." },
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
       });
     }
 
@@ -274,17 +292,23 @@ exports.toggleProperty = async (req, res, next) => {
     const property = await Property.findByIdAndUpdate(
       req.params.id,
       { $set: { isActive: req.body.isActive } },
-      { returnDocument: "after", runValidators: true }
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
     );
 
     if (!property) {
       return res.status(404).json({
         success: false,
-        error: { code: "PROPERTY_NOT_FOUND", message: "Property not found." },
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { property },
     });
@@ -298,26 +322,31 @@ exports.deleteProperty = async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({
         success: false,
-        error: { code: "INVALID_PROPERTY_ID", message: "Invalid property ID." },
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
       });
     }
 
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findByIdAndDelete(
+      req.params.id
+    );
 
     if (!property) {
       return res.status(404).json({
         success: false,
-        error: { code: "PROPERTY_NOT_FOUND", message: "Property not found." },
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
       });
     }
 
-    property.isActive = false;
-    await property.save();
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Property deactivated successfully.",
-      data: { property },
+      message: "Property removed successfully",
+      data: property,
     });
   } catch (error) {
     next(error);

@@ -23,6 +23,7 @@ const adminInquiryRoutes = require("./routes/adminInquiry.routes");
 const adminSettingsRoutes = require("./routes/adminSettings.routes");
 const adminPropertyUploadRoutes = require("./routes/adminPropertyUpload.routes");
 const contactRoutes = require("./routes/contact.routes");
+const propertyAssessmentRoutes = require('./routes/PropertyAssessment.routes')
 
 const {
   notFoundHandler,
@@ -98,6 +99,7 @@ app.use("/api/admin/settings", adminSettingsRoutes);
 app.use("/api/admin/properties", adminPropertyUploadRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use('/api/property-assessments', propertyAssessmentRoutes)
 
 app.use(notFoundHandler);
 app.use(errorHandler);
