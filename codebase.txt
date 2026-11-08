@@ -1,0 +1,5608 @@
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\docs\PROGRESS.md ==========
+
+import pypandoc
+
+content = """# Avanta Living — Backend & Frontend Progress
+
+**Project:** Avanta Living accommodation booking website  
+**Frontend:** `D:\\IDEs\\cozy-escapes\\cozy-escapes`  
+**Backend:** `D:\\IDEs\\cozy-escapes\\api`  
+**Current phase:** Phase 4 — Frontend Integration  
+**Overall status:** Phases 0–4 completed; Phase 5 is next.
+
+> Update this file at each phase checkpoint. Do not mark a task complete until it has been implemented and tested.
+
+## Phase 0 — Requirements and Decisions
+
+**Status: COMPLETE**
+
+- [x] Confirm MongoDB Atlas as the database.
+- [x] Confirm Stripe Checkout in test mode for full payment.
+- [x] Define pricing model: nightly rate, cleaning fee, minimum nights, and optional seasonal/weekend rates, taxes, and additional fees.
+- [x] Decide to build an internal availability calendar first.
+- [x] Defer external calendar/API integration until the client supplies provider documentation and credentials.
+- [x] Decide on instant booking after verified payment.
+- [x] Plan an admin API and React admin UI.
+- [x] Choose Cloudinary for property images.
+- [x] Choose Nodemailer/company SMTP for email.
+- [x] Confirm timezone `Australia/Sydney` and currency `AUD`.
+- [x] Preserve public property IDs as strings, including numeric-like IDs such as `441841`.
+- [x] Define separate Book Now and Send Inquiry flows.
+- [x] Define the frontend API response contract: success uses `{ data }`; errors use `{ error: { code, message, fields? } }`.
+
+### Outstanding client information
+
+- Actual property rates and pricing rules.
+- External calendar/booking-platform API documentation and credentials.
+- Final cancellation wording for bookings made fewer than 7 days before arrival.
+- Confirmation of how cancellation refunds apply to fees and taxes.
+- Real property descriptions, images, and guest testimonials where placeholders remain.
+
+## Phase 1 — Backend Scaffold and Core Setup
+
+**Status: COMPLETE**
+
+- [x] Create the backend project under `api`.
+- [x] Set up Express and Mongoose.
+- [x] Add environment configuration and `.env.example`.
+- [x] Add CORS, Helmet, JSON parsing, and global rate limiting.
+- [x] Add central error handling and a 404 handler.
+- [x] Add `GET /api/health`.
+- [x] Connect to MongoDB Atlas.
+- [x] Confirm the backend server starts successfully.
+
+## Phase 2 — Models and Seed Data
+
+**Status: COMPLETE**
+
+- [x] Create the Property model.
+- [x] Create the Inquiry model.
+- [x] Create the Booking model.
+- [x] Create the BlockedDate model.
+- [x] Create the Testimonial model.
+- [x] Create the ServiceCard model.
+- [x] Create the OwnerLead model.
+- [x] Create the AdminUser model.
+- [x] Add indexes and schema validation.
+- [x] Create seed data for 12 properties, testimonials, and service cards.
+- [x] Mark sample properties and testimonials as placeholders where appropriate.
+- [x] Run the seed script successfully.
+
+**Caution:** The seed script clears existing Property, Testimonial, and ServiceCard documents before reseeding. Do not rerun it against data that must be preserved.
+
+## Phase 3 — Public Read APIs
+
+**Status: COMPLETE — user-tested**
+
+- [x] `GET /api/properties` — listing results and pagination/filter support.
+- [x] `GET /api/properties/:id` — fetch a property by its stable public ID.
+- [x] `GET /api/testimonials` — published, non-placeholder testimonials only.
+- [x] `GET /api/services` — published service cards.
+- [x] `GET /api/health` — health endpoint.
+- [x] Verify the public API responses in testing.
+
+## Phase 4 — Frontend Integration
+
+**Status: COMPLETE — user-tested**
+
+### Property data
+
+- [x] Connect `src/hooks/useProperties.js` to `GET /api/properties`.
+- [x] Normalize backend property fields for existing frontend components.
+- [x] Connect property detail loading to `GET /api/properties/:id`.
+- [x] Add property detail loading and error states through `usePropertyState`.
+- [x] Run `npm run build` successfully.
+- [x] Verify property `441841` returns `200 OK`.
+- [x] Verify `/accommodations` requests `GET /api/properties`; browser showed `304 Not Modified`, which is a valid cache response.
+
+### Testimonials and services
+
+- [x] Connect `src/components/home/Testimonials.jsx` to `GET /api/testimonials`.
+- [x] Keep testimonials empty when the API returns `{ "data": [] }`; do not display placeholder reviews as genuine.
+- [x] Connect `src/components/home/ServicesFaq.jsx` to `GET /api/services`.
+- [x] Verify the services endpoint returns three service cards.
+- [x] Run `npm run build` successfully after component changes.
+
+### Notes and remaining polish
+
+- The property detail page supplements API data with local `src/data/propertyDetails.js` content where available, including the 29-image gallery and description for property `441841`.
+- The accommodation listing endpoint's `304 Not Modified` response is valid; it indicates the browser can reuse a cached response.
+- Existing build warnings remain to investigate later:
+  - `/src/style.css` does not exist at build time.
+  - Tailwind CSS optimizer warning for `--animate-fade-up: fade-up 0.5s ease both;`.
+- Real testimonials are not available in the public API yet because current seeded testimonial records are placeholders or unpublished.
+- The client has not yet supplied all production property data and pricing.
+
+## Phase 5 — Inquiries, Email Notifications, and Contact
+
+**Status: Completed**
+
+Planned tasks:
+
+- [x] Inspect the current frontend inquiry implementation before editing.
+- [x] Replace the frontend inquiry stub with a real API request.
+- [x] Validate and sanitize inquiry payloads on the backend.
+- [x] Save inquiries in MongoDB.
+- [x] Email the company at `Hello.avantaliving@gmail.com`.
+- [x] Send a guest acknowledgement email.
+- [x] Track email delivery status without losing the saved inquiry if email delivery fails.
+- [x] Inspect and integrate the contact form, once its frontend implementation is identified.
+- [x] Add/verify rate limiting and spam protections for public form endpoints.
+- [x] Test successful submissions, validation errors, and email failures.
+
+**Inquiry rules:** Dates are optional for inquiries. An inquiry does not reserve or hold dates. Booking dates will be required in the separate booking flow.
+
+## Phase 6 — Availability and Pricing
+
+**Status: Completed**
+
+- [x] Implement server-side availability checks.
+- [x] Implement quote calculation using configured nightly rates, cleaning fee, minimum nights, and supported additional charges.
+- [x] Respect the `Australia/Sydney` timezone and `AUD` currency.
+- [x] Support blocked dates and internal calendar entries.
+- [x] Avoid double bookings and design safe handling for concurrent booking attempts.
+- [x] Do not make properties bookable until pricing is configured.
+- [x] Confirm unresolved pricing and cancellation rules with the client.
+- [x] Plan an adapter for external calendars; implement external sync only after provider documentation and credentials arrive.
+
+## Phase 7 — Booking and Payments
+
+**Status: Completed**
+
+- [x] Create booking quotes server-side; never trust client-supplied totals.
+- [x] Create Stripe Checkout sessions in test mode.
+- [x] Implement verified Stripe webhooks.
+- [x] Make webhook processing idempotent.
+- [x] Confirm a booking only after verified payment success.
+- [x] Implement temporary booking holds and expiry.
+- [x] Prevent overlapping confirmed bookings and handle concurrency safely.
+- [x] Implement cancellation/refund rules after client confirmation.
+- [x] Test success, cancellation, failure, webhook retries, and expiry.
+
+## Phase 8 — Admin Authentication, API, and UI
+
+**Status: NOT STARTED**
+
+- [ ] Implement secure admin login/logout/current-user endpoints.
+- [ ] Verify password hashing and role checks.
+- [ ] Build property management APIs and admin UI.
+- [ ] Manage images through Cloudinary.
+- [ ] Manage pricing, availability, blocked dates, bookings, inquiries, testimonials, service cards, and relevant settings.
+- [ ] Validate admin inputs and protect admin routes.
+- [ ] Test authorization and CRUD operations.
+
+## Phase 9 — Hardening, Testing, and Deployment
+
+**Status: NOT STARTED**
+
+- [ ] Review environment variables and production secrets.
+- [ ] Confirm production CORS origins and security headers.
+- [ ] Review rate limits, input validation, spam controls, and error responses.
+- [ ] Add/verify structured logging and production-safe errors.
+- [ ] Verify database indexes and query pagination.
+- [ ] Test critical guest and admin workflows end to end.
+- [ ] Resolve or document frontend CSS build warnings.
+- [ ] Choose hosting and deployment configuration with the project owner.
+- [ ] Configure production environment variables and payment webhook URLs.
+- [ ] Run final smoke tests after deployment.
+
+## Current next action
+
+Start **Phase 5** by inspecting these frontend files without changing them yet:
+
+```cmd
+cd /d D:\\IDEs\\cozy-escapes\\cozy-escapes
+type src\\services\\api.js
+type src\\components\\booking\\Reservation.jsx
+```
+
+Review the current implementation before editing. Work in small checkpoints, run the relevant tests, and update this file when each phase changes status.
+"""
+
+output_path = "/mnt/data/PROGRESS.md"
+pypandoc.convert_text(content, "md", format="md", outputfile=output_path, extra_args=["--standalone"])
+print(f"Created: {output_path}")
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\package.json ==========
+
+{
+  "name": "api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.2",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.1.7",
+    "react-google-recaptcha": "^3.1.0",
+    "stripe": "^23.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\scripts\createAdmin.js ==========
+
+
+require("dotenv").config();
+
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const readline = require("readline");
+const AdminUser = require("../src/models/AdminUser");
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const ask = (question) =>
+  new Promise((resolve) => rl.question(question, resolve));
+
+async function createAdmin() {
+  try {
+    const name = (await ask("Admin name: ")).trim();
+    const email = (await ask("Admin email: ")).trim().toLowerCase();
+    const password = await ask("Admin password: ");
+
+    if (!name || !email || password.length < 12) {
+      throw new Error(
+        "Name and email are required. Password must be at least 12 characters."
+      );
+    }
+
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is missing from .env");
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+
+    const existing = await AdminUser.findOne({ email });
+
+    if (existing) {
+      throw new Error("An admin with this email already exists.");
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const admin = await AdminUser.create({
+      name,
+      email,
+      passwordHash,
+      role: "admin",
+      isActive: true,
+    });
+
+    console.log(`Admin created successfully: ${admin.email}`);
+  } catch (error) {
+    console.error("Admin creation failed:", error.message);
+    process.exitCode = 1;
+  } finally {
+    rl.close();
+    await mongoose.disconnect().catch(() => {});
+  }
+}
+
+createAdmin();
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\scripts\seed.js ==========
+
+
+require("dotenv").config();
+
+const mongoose = require("mongoose");
+const { connectDatabase } = require("../src/config/database");
+const Property = require("../src/models/Property");
+const Testimonial = require("../src/models/Testimonial");
+const ServiceCard = require("../src/models/ServiceCard");
+const { properties, testimonials, serviceCards } = require("../src/data/seedData");
+
+async function seedDatabase() {
+  try {
+    console.log("Connecting to MongoDB Atlas...");
+    await connectDatabase();
+
+    console.log("Clearing existing seed collections...");
+    await Promise.all([
+      Property.deleteMany({}),
+      Testimonial.deleteMany({}),
+      ServiceCard.deleteMany({})
+    ]);
+
+    console.log("Seeding properties...");
+    await Property.insertMany(properties);
+
+    console.log("Seeding testimonials...");
+    await Testimonial.insertMany(testimonials);
+
+    console.log("Seeding service cards...");
+    await ServiceCard.insertMany(serviceCards);
+
+    const [propertyCount, testimonialCount, serviceCardCount] =
+      await Promise.all([
+        Property.countDocuments(),
+        Testimonial.countDocuments(),
+        ServiceCard.countDocuments()
+      ]);
+
+    console.log("\nDATABASE SEED COMPLETED");
+    console.log("Properties:", propertyCount);
+    console.log("Testimonials:", testimonialCount);
+    console.log("Service cards:", serviceCardCount);
+  } catch (error) {
+    console.error("\nDATABASE SEED FAILED");
+    console.error(error.message);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+seedDatabase();
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\scripts\testEmail.js ==========
+
+
+require("dotenv").config();
+
+const {
+  verifyEmailConnection,
+} = require("../src/config/email");
+
+async function main() {
+  try {
+    await verifyEmailConnection();
+    console.log("SMTP connection verified successfully.");
+  } catch (error) {
+    console.error("SMTP verification failed:", error.message);
+    process.exitCode = 1;
+  }
+}
+
+main();
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\app.js ==========
+
+
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+
+const healthRoutes = require("./routes/health.routes");
+const propertyRoutes = require("./routes/property.routes");
+const testimonialRoutes = require("./routes/testimonial.routes");
+const serviceRoutes = require("./routes/service.routes");
+const inquiryRoutes = require("./routes/inquiry.routes");
+const availabilityRoutes = require("./routes/availability.routes");
+const pricingRoutes = require("./routes/pricing.routes");
+const bookingRoutes = require("./routes/booking.routes");
+const paymentRoutes = require("./routes/payment.routes");
+const stripeWebhookRoutes = require("./routes/stripeWebhook.routes");
+const adminAuthRoutes = require("./routes/adminAuth.routes");
+const adminRoutes = require("./routes/admin.routes");
+const adminPropertyRoutes = require("./routes/adminProperty.routes");
+const adminBookingRoutes = require("./routes/adminBooking.routes");
+const adminAvailabilityRoutes = require("./routes/adminAvailability.routes");
+const adminInquiryRoutes = require("./routes/adminInquiry.routes");
+const adminSettingsRoutes = require("./routes/adminSettings.routes");
+const adminPropertyUploadRoutes = require("./routes/adminPropertyUpload.routes");
+const contactRoutes = require("./routes/contact.routes");
+const propertyAssessmentRoutes = require('./routes/PropertyAssessment.routes')
+
+const {
+  notFoundHandler,
+  errorHandler,
+} = require("./middleware/errorHandler");
+
+const app = express();
+app.set("trust proxy", 1);
+
+app.disable("x-powered-by");
+
+app.use(helmet());
+
+const allowedOrigins = (
+  process.env.CLIENT_URL
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      const error = new Error("Origin is not allowed by CORS.");
+      error.statusCode = 403;
+      error.code = "CORS_ORIGIN_DENIED";
+
+      return callback(error);
+    },
+    credentials: true,
+  })
+);
+
+app.use("/api/payments/webhook", stripeWebhookRoutes);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 200,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many requests. Please try again later.",
+    },
+  },
+});
+
+app.use("/api", apiLimiter);
+
+app.use("/api/health", healthRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/availability", availabilityRoutes);
+app.use("/api/pricing", pricingRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin/properties", adminPropertyRoutes);
+app.use("/api/admin/bookings", adminBookingRoutes);
+app.use("/api/admin/availability", adminAvailabilityRoutes);
+app.use("/api/admin/inquiries", adminInquiryRoutes);
+app.use("/api/admin/settings", adminSettingsRoutes);
+app.use("/api/admin/properties", adminPropertyUploadRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use('/api/property-assessments', propertyAssessmentRoutes)
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+module.exports = app;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\config\cloudinary.js ==========
+
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+module.exports = cloudinary;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\config\database.js ==========
+
+const mongoose = require("mongoose");
+
+async function connectDatabase() {
+  const mongoUri = process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    console.warn(
+      "MONGODB_URI is not configured. Starting without a database connection."
+    );
+    return false;
+  }
+
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+    });
+
+    console.log("MongoDB connected successfully.");
+    return true;
+  } catch (error) {
+    console.error("MongoDB connection failed:", error.message);
+    throw error;
+  }
+}
+
+function getDatabaseStatus() {
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+
+  return states[mongoose.connection.readyState] || "unknown";
+}
+
+module.exports = {
+  connectDatabase,
+  getDatabaseStatus,
+};
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\config\email.js ==========
+
+
+const nodemailer = require("nodemailer");
+
+const smtpConfigured = Boolean(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS
+);
+
+const transporter = smtpConfigured
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 465),
+      secure:
+        process.env.SMTP_SECURE === "true" ||
+        Number(process.env.SMTP_PORT || 465) === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    })
+  : null;
+
+async function sendEmail({ to, subject, text, html, replyTo }) {
+  if (!transporter) {
+    throw new Error("SMTP is not configured.");
+  }
+
+  return transporter.sendMail({
+    from: `"Avanta Living" <${process.env.SMTP_USER}>`,
+    to,
+    subject,
+    text,
+    html,
+    ...(replyTo ? { replyTo } : {}),
+  });
+}
+
+async function verifyEmailConnection() {
+  if (!transporter) {
+    throw new Error("SMTP is not configured.");
+  }
+
+  return transporter.verify();
+}
+
+module.exports = { sendEmail, verifyEmailConnection };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminAuth.controller.js ==========
+
+
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const AdminUser = require("../models/AdminUser");
+
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Email and password are required.",
+        },
+      });
+    }
+
+    const admin = await AdminUser.findOne({
+      email: email.trim().toLowerCase(),
+      isActive: true,
+    }).select("+passwordHash");
+
+    if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password.",
+        },
+      });
+    }
+
+    if (!process.env.ADMIN_JWT_SECRET) {
+      throw new Error("ADMIN_JWT_SECRET is not configured.");
+    }
+
+    const token = jwt.sign(
+      {
+        sub: admin._id.toString(),
+        role: admin.role,
+      },
+      process.env.ADMIN_JWT_SECRET,
+      {
+        expiresIn: "8h",
+        issuer: "avanta-living-api",
+        audience: "avanta-living-admin",
+      }
+    );
+
+    admin.lastLogin = new Date();
+    await admin.save();
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        token,
+        expiresIn: 28800,
+        admin: {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminAvailability.controller.js ==========
+
+
+const mongoose = require("mongoose");
+const Property = require("../models/Property");
+const Booking = require("../models/Booking");
+const BlockedDate = require("../models/BlockedDate");
+
+exports.getAvailability = async (req, res, next) => {
+  try {
+    const { propertyId, start, end } = req.query;
+
+    if (!mongoose.isValidObjectId(propertyId)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_PROPERTY_ID", message: "Valid propertyId is required." },
+      });
+    }
+
+    const property = await Property.findById(propertyId).select("propertyId title").lean();
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "PROPERTY_NOT_FOUND", message: "Property not found." },
+      });
+    }
+
+    const startDate = start ? new Date(start) : new Date();
+    const endDate = end ? new Date(end) : new Date(startDate.getTime() + 90 * 86400000);
+
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime()) ||
+      startDate >= endDate
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_DATE_RANGE", message: "Provide a valid start and end date." },
+      });
+    }
+
+    const [bookings, blockedDates] = await Promise.all([
+      Booking.find({
+        property: property._id,
+        status: "confirmed",
+        checkin: { $lt: endDate },
+        checkout: { $gt: startDate },
+      }).select("reference checkin checkout status").lean(),
+      BlockedDate.find({
+        property: property._id,
+        startDate: { $lt: endDate },
+        endDate: { $gt: startDate },
+      }).lean(),
+    ]);
+
+    res.json({
+      success: true,
+      data: { property, bookings, blockedDates },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+exports.createBlock = async (req, res, next) => {
+  try {
+    const { propertyId, startDate, endDate, type, source, notes } = req.body;
+
+    if (!propertyId || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Property, start date and end date are required.",
+        },
+      });
+    }
+
+    if (!mongoose.isValidObjectId(propertyId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start >= end
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_DATE_RANGE",
+          message: "End date must be after start date.",
+        },
+      });
+    }
+
+    const allowedTypes = [
+      "owner_stay",
+      "maintenance",
+      "external_booking",
+      "manual",
+    ];
+
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_BLOCK_TYPE",
+          message: "Choose a valid blocked-date type.",
+        },
+      });
+    }
+
+    const property = await Property.findById(propertyId);
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
+      });
+    }
+
+    const conflict = await Booking.findOne({
+      property: property._id,
+      status: "confirmed",
+      checkin: { $lt: end },
+      checkout: { $gt: start },
+    }).select("_id reference");
+
+    if (conflict) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: "BOOKING_CONFLICT",
+          message: `These dates overlap confirmed booking ${conflict.reference || conflict._id}.`,
+        },
+      });
+    }
+
+    const block = await BlockedDate.create({
+      property: property._id,
+      propertyId: property.propertyId,
+      startDate: start,
+      endDate: end,
+      type,
+      source: source === "internal" ? "internal" : "internal",
+      notes: typeof notes === "string" ? notes.trim() : "",
+      createdBy: req.admin._id,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: { block },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+exports.deleteBlock = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_BLOCK_ID", message: "Invalid block ID." },
+      });
+    }
+
+    const block = await BlockedDate.findByIdAndDelete(req.params.id);
+
+    if (!block) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "BLOCK_NOT_FOUND", message: "Blocked date not found." },
+      });
+    }
+
+    res.json({ success: true, message: "Blocked dates removed." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminBookingController.js ==========
+
+
+const mongoose = require("mongoose");
+const Booking = require("../models/Booking");
+
+exports.getBookings = async (req, res, next) => {
+  try {
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
+    const filter = {};
+
+    const allowedStatuses = [
+      "pending", "confirmed", "cancelled", "expired", "completed",
+    ];
+
+    if (allowedStatuses.includes(req.query.status)) {
+      filter.status = req.query.status;
+    }
+
+    if (req.query.search?.trim()) {
+      const search = req.query.search.trim();
+      const conditions = [
+        { reference: { $regex: search, $options: "i" } },
+        { propertyId: { $regex: search, $options: "i" } },
+        { "guest.name": { $regex: search, $options: "i" } },
+        { "guest.email": { $regex: search, $options: "i" } },
+      ];
+
+      if (mongoose.isValidObjectId(search)) {
+        conditions.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      filter.$or = conditions;
+    }
+
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Booking.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        bookings,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBooking = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_BOOKING_ID", message: "Invalid booking ID." },
+      });
+    }
+
+    const booking = await Booking.findById(req.params.id).lean();
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "BOOKING_NOT_FOUND", message: "Booking not found." },
+      });
+    }
+
+    res.json({ success: true, data: { booking } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateBookingStatus = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_BOOKING_ID", message: "Invalid booking ID." },
+      });
+    }
+
+    const { status } = req.body;
+    const allowedStatuses = ["cancelled", "completed"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_BOOKING_STATUS",
+          message: "Admin can set status to cancelled or completed only.",
+        },
+      });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "BOOKING_NOT_FOUND", message: "Booking not found." },
+      });
+    }
+
+    if (booking.status === status) {
+      return res.json({ success: true, data: { booking } });
+    }
+
+    if (["cancelled", "expired", "completed"].includes(booking.status)) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: "BOOKING_STATE_CONFLICT",
+          message: `Cannot change a ${booking.status} booking.`,
+        },
+      });
+    }
+
+    if (status === "completed" && booking.status !== "confirmed") {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: "BOOKING_STATE_CONFLICT",
+          message: "Only confirmed bookings can be completed.",
+        },
+      });
+    }
+
+    if (status === "cancelled" && booking.payment?.status === "paid") {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: "REFUND_REVIEW_REQUIRED",
+          message: "This booking is paid. Process the cancellation and refund workflow before changing its status.",
+        },
+      });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    res.json({ success: true, data: { booking } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminDashboard.controller.js ==========
+
+
+const Property = require("../models/Property");
+const Booking = require("../models/Booking");
+const Inquiry = require("../models/Inquiry");
+
+exports.getDashboard = async (req, res, next) => {
+  try {
+    const [
+      totalProperties,
+      activeProperties,
+      totalBookings,
+      pendingBookings,
+      confirmedBookings,
+      totalInquiries,
+      pendingInquiries,
+      revenueResult,
+    ] = await Promise.all([
+      Property.countDocuments(),
+      Property.countDocuments({ isActive: true }),
+      Booking.countDocuments(),
+      Booking.countDocuments({ status: "pending" }),
+      Booking.countDocuments({
+        status: "confirmed",
+        "payment.status": "paid",
+      }),
+      Inquiry.countDocuments(),
+      Inquiry.countDocuments({
+        status: { $in: ["pending", "new", "unread"] },
+      }),
+      Booking.aggregate([
+        {
+          $match: {
+            status: "confirmed",
+            "payment.status": "paid",
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: {
+                $ifNull: [
+                  "$priceBreakdown.total",
+                  {
+                    $ifNull: [
+                      "$priceBreakdown.totalAmount",
+                      "$priceBreakdown.totalPrice",
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        properties: {
+          total: totalProperties,
+          active: activeProperties,
+        },
+        bookings: {
+          total: totalBookings,
+          pending: pendingBookings,
+          confirmedAndPaid: confirmedBookings,
+        },
+        inquiries: {
+          total: totalInquiries,
+          pending: pendingInquiries,
+        },
+        revenue: {
+          amount: revenueResult[0]?.total || 0,
+          currency: "AUD",
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminImageUpload.controller.js ==========
+
+
+const cloudinary = require("../config/cloudinary");
+const { Readable } = require("stream");
+
+const uploadImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "IMAGE_REQUIRED",
+          message: "Please select an image to upload.",
+        },
+      });
+    }
+
+    if (
+      !process.env.CLOUDINARY_CLOUD_NAME ||
+      !process.env.CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_SECRET
+    ) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "CLOUDINARY_NOT_CONFIGURED",
+          message: "Cloudinary credentials are not configured.",
+        },
+      });
+    }
+
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "avanta-living/properties",
+          resource_type: "image",
+        },
+        (error, uploadResult) => {
+          if (error) return reject(error);
+          resolve(uploadResult);
+        }
+      );
+
+      Readable.from(req.file.buffer).pipe(uploadStream);
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        url: result.secure_url,
+        publicId: result.public_id,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { uploadImage };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminInquiry.controller.js ==========
+
+
+const mongoose = require("mongoose");
+const Inquiry = require("../models/Inquiry");
+
+exports.getInquiries = async (req, res, next) => {
+  try {
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, Number.parseInt(req.query.limit, 10) || 20)
+    );
+
+    const filter = {};
+    const allowedStatuses = ["new", "contacted", "converted", "closed"];
+
+    if (req.query.status && req.query.status !== "all") {
+      if (!allowedStatuses.includes(req.query.status)) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "INVALID_STATUS", message: "Invalid inquiry status." },
+        });
+      }
+
+      filter.status = req.query.status;
+    }
+
+    if (req.query.search?.trim()) {
+      const search = req.query.search.trim().slice(0, 150);
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
+
+      const conditions = [
+        { "guest.firstName": regex },
+        { "guest.lastName": regex },
+        { "guest.email": regex },
+        { "guest.phone": regex },
+        { propertyId: regex },
+      ];
+
+      if (mongoose.isValidObjectId(search)) {
+        conditions.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      filter.$or = conditions;
+    }
+
+    const [inquiries, total] = await Promise.all([
+      Inquiry.find(filter)
+        .populate("property", "title propertyId")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Inquiry.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        inquiries,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getInquiry = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_INQUIRY_ID",
+          message: "Invalid inquiry ID.",
+        },
+      });
+    }
+
+    const inquiry = await Inquiry.findById(req.params.id)
+      .populate("property", "title propertyId location city")
+      .lean();
+
+    if (!inquiry) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "INQUIRY_NOT_FOUND",
+          message: "Inquiry not found.",
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { inquiry },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateInquiry = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_INQUIRY_ID",
+          message: "Invalid inquiry ID.",
+        },
+      });
+    }
+
+    const allowedStatuses = ["new", "contacted", "converted", "closed"];
+    const updates = {};
+
+    if (Object.prototype.hasOwnProperty.call(req.body, "status")) {
+      if (!allowedStatuses.includes(req.body.status)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_STATUS",
+            message: "Status must be new, contacted, converted, or closed.",
+          },
+        });
+      }
+
+      updates.status = req.body.status;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, "notes")) {
+      if (
+        typeof req.body.notes !== "string" ||
+        req.body.notes.length > 5000
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_NOTES",
+            message: "Notes must be a string with at most 5000 characters.",
+          },
+        });
+      }
+
+      updates.notes = req.body.notes.trim();
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "NO_UPDATES",
+          message: "Provide a valid status or notes update.",
+        },
+      });
+    }
+
+    const inquiry = await Inquiry.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { returnDocument: "after", runValidators: true }
+    ).populate("property", "title propertyId");
+
+    if (!inquiry) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "INQUIRY_NOT_FOUND",
+          message: "Inquiry not found.",
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { inquiry },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminProperty.controller.js ==========
+
+
+const mongoose = require("mongoose");
+const Property = require("../models/Property");
+
+async function generatePropertyId() {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const id = String(
+      Math.floor(100000 + Math.random() * 900000)
+    );
+
+    const exists = await Property.exists({ propertyId: id });
+
+    if (!exists) return id;
+  }
+
+  throw new Error("Could not generate a unique property ID.");
+}
+
+function isPricingConfigured(pricing) {
+  const nightlyRate = Number(pricing?.nightlyRate);
+  const minNights = Number(pricing?.minNights);
+
+  return (
+    pricing?.nightlyRate !== null &&
+    pricing?.nightlyRate !== undefined &&
+    pricing?.nightlyRate !== "" &&
+    Number.isFinite(nightlyRate) &&
+    nightlyRate > 0 &&
+    Number.isFinite(minNights) &&
+    minNights >= 1
+  );
+}
+
+exports.getProperties = async (req, res, next) => {
+  try {
+    const page = Math.max(
+      1,
+      Number.parseInt(req.query.page, 10) || 1
+    );
+
+    const limit = Math.min(
+      100,
+      Math.max(1, Number.parseInt(req.query.limit, 10) || 20)
+    );
+
+    const filter = {};
+
+    if (req.query.search?.trim()) {
+      const search = req.query.search.trim();
+
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { title: { $regex: search, $options: "i" } },
+        { propertyId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (["true", "false"].includes(req.query.isActive)) {
+      filter.isActive = req.query.isActive === "true";
+    }
+
+    const [properties, total] = await Promise.all([
+      Property.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      Property.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        properties,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProperty = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
+      });
+    }
+
+    const property = await Property.findById(req.params.id).lean();
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: { property },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createProperty = async (req, res, next) => {
+  try {
+    const payload = { ...req.body };
+
+    delete payload.propertyId;
+    delete payload.createdBy;
+    delete payload.updatedBy;
+    delete payload.pricingConfigured;
+
+    payload.propertyId = await generatePropertyId();
+    payload.createdBy = req.admin._id;
+    payload.updatedBy = req.admin._id;
+
+    if (payload.title) {
+      payload.slug = payload.title
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    payload.pricingConfigured = isPricingConfigured(
+      payload.pricing
+    );
+
+    const property = await Property.create(payload);
+
+    return res.status(201).json({
+      success: true,
+      data: { property },
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      error.statusCode = 409;
+      error.code = "DUPLICATE_PROPERTY";
+      error.message = "A property with this identifier already exists.";
+    }
+
+    next(error);
+  }
+};
+
+exports.updateProperty = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
+      });
+    }
+
+    const allowedFields = [
+      "title",
+      "location",
+      "address",
+      "city",
+      "state",
+      "country",
+      "description",
+      "images",
+      "guests",
+      "bedrooms",
+      "bathrooms",
+      "amenities",
+      "amenityGroups",
+      "pricing",
+      "cancellationPolicy",
+      "houseRules",
+      "checkInTime",
+      "checkOutTime",
+      "timezone",
+      "isActive",
+      "isFeatured",
+      "isPlaceholder",
+      "sortOrder",
+      "rating",
+      "reviewCount",
+    ];
+
+    const payload = {};
+
+    for (const field of allowedFields) {
+      if (
+        Object.prototype.hasOwnProperty.call(req.body, field)
+      ) {
+        payload[field] = req.body[field];
+      }
+    }
+
+    if (payload.title) {
+      payload.slug = payload.title
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    const existingProperty = await Property.findById(
+      req.params.id
+    );
+
+    if (!existingProperty) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
+      });
+    }
+
+    const finalPricing = payload.pricing
+      ? {
+          ...(existingProperty.pricing?.toObject?.() ||
+            existingProperty.pricing?.toJSON?.() ||
+            existingProperty.pricing ||
+            {}),
+          ...payload.pricing,
+        }
+      : existingProperty.pricing;
+
+    payload.pricingConfigured = isPricingConfigured(
+      finalPricing
+    );
+
+    payload.updatedBy = req.admin._id;
+
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      { $set: payload },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: { property },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.toggleProperty = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
+      });
+    }
+
+    if (typeof req.body.isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_STATUS",
+          message: "isActive must be true or false.",
+        },
+      });
+    }
+
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      { $set: { isActive: req.body.isActive } },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
+    );
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: { property },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteProperty = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "Invalid property ID.",
+        },
+      });
+    }
+
+    const property = await Property.findByIdAndDelete(
+      req.params.id
+    );
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found.",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Property removed successfully",
+      data: property,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\adminSettings.controller.js ==========
+
+
+const SiteSetting = require("../models/SiteSettings");
+
+const DEFAULT_SETTINGS = {
+  siteName: "Avanta Living",
+  contactEmail: "Hello.avantaliving@gmail.com",
+  contactPhone: "",
+  address: "",
+  currency: "AUD",
+  timezone: "Australia/Sydney",
+  checkInTime: "15:00",
+  checkOutTime: "10:00",
+  defaultMinNights: 1,
+  cancellationPolicyNotes: "",
+};
+
+const ALLOWED_FIELDS = Object.keys(DEFAULT_SETTINGS);
+
+async function getSettings(req, res, next) {
+  try {
+    const settings = await SiteSetting.findOne()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data: settings
+        ? { ...DEFAULT_SETTINGS, ...settings }
+        : DEFAULT_SETTINGS,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateSettings(req, res, next) {
+  try {
+    const payload = {};
+
+    for (const field of ALLOWED_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        payload[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "EMPTY_SETTINGS",
+          message: "Provide at least one setting to update.",
+        },
+      });
+    }
+
+    if (
+      payload.contactEmail !== undefined &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.contactEmail)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_EMAIL",
+          message: "Enter a valid contact email address.",
+        },
+      });
+    }
+
+    const settings = await SiteSetting.findOneAndUpdate(
+      {},
+      {
+        $set: {
+          ...payload,
+          updatedBy: req.admin._id,
+        },
+        $setOnInsert: {},
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Settings saved successfully.",
+      data: settings,
+    });
+  } catch (error) {
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_SETTINGS",
+          message: error.message,
+        },
+      });
+    }
+
+    next(error);
+  }
+}
+
+module.exports = {
+  getSettings,
+  updateSettings,
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\availability.controller.js ==========
+
+
+const Property = require("../models/Property");
+const Booking = require("../models/Booking");
+const BlockedDate = require("../models/BlockedDate");
+
+function sendError(res, status, code, message) {
+  return res.status(status).json({
+    error: { code, message },
+  });
+}
+
+function parseDateOnly(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== value
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+async function checkAvailability(req, res, next) {
+  try {
+    const { propertyId } = req.params;
+    const { checkin, checkout } = req.query;
+    const guests = Number(req.query.guests);
+
+    const startDate = parseDateOnly(checkin);
+    const endDate = parseDateOnly(checkout);
+
+    if (!startDate || !endDate) {
+      return sendError(
+        res,
+        400,
+        "INVALID_DATES",
+        "Check-in and check-out must use valid YYYY-MM-DD dates."
+      );
+    }
+
+    if (endDate <= startDate) {
+      return sendError(
+        res,
+        400,
+        "INVALID_DATE_RANGE",
+        "Check-out must be after check-in."
+      );
+    }
+
+    if (
+      !Number.isInteger(guests) ||
+      guests < 1 ||
+      guests > 100
+    ) {
+      return sendError(
+        res,
+        400,
+        "INVALID_GUEST_COUNT",
+        "Guests must be a whole number between 1 and 100."
+      );
+    }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    if (startDate < today) {
+      return sendError(
+        res,
+        400,
+        "PAST_CHECKIN",
+        "Check-in cannot be in the past."
+      );
+    }
+
+    const property = await Property.findOne({
+      propertyId,
+      isActive: true,
+      isPlaceholder: false,
+      pricingConfigured: true,
+    }).lean();
+
+    if (!property) {
+      return sendError(
+        res,
+        404,
+        "PROPERTY_NOT_BOOKABLE",
+        "This property is unavailable for booking or its pricing has not been configured."
+      );
+    }
+
+    if (guests > property.guests) {
+      return sendError(
+        res,
+        400,
+        "GUEST_CAPACITY_EXCEEDED",
+        `This property accommodates a maximum of ${property.guests} guests.`
+      );
+    }
+
+    const nights = Math.round(
+      (endDate.getTime() - startDate.getTime()) / 86400000
+    );
+
+    const minimumNights = property.pricing?.minNights || 1;
+
+    if (nights < minimumNights) {
+      return res.status(200).json({
+        data: {
+          propertyId,
+          available: false,
+          reason: "MINIMUM_NIGHTS",
+          message: `This property requires a minimum stay of ${minimumNights} nights.`,
+          checkin,
+          checkout,
+          nights,
+          minimumNights,
+          currency: property.pricing?.currency || "AUD",
+        },
+      });
+    }
+
+    const now = new Date();
+
+    const [blockedDate, conflictingBooking] = await Promise.all([
+      BlockedDate.findOne({
+        property: property._id,
+        startDate: { $lt: endDate },
+        endDate: { $gt: startDate },
+      })
+        .select("_id type startDate endDate")
+        .lean(),
+
+      Booking.findOne({
+        property: property._id,
+        checkin: { $lt: endDate },
+        checkout: { $gt: startDate },
+        $or: [
+          { status: "confirmed" },
+          {
+            status: "pending",
+            holdExpiresAt: { $gt: now },
+          },
+        ],
+      })
+        .select("_id status checkin checkout")
+        .lean(),
+    ]);
+
+    if (blockedDate || conflictingBooking) {
+      return res.status(200).json({
+        data: {
+          propertyId,
+          available: false,
+          reason: blockedDate ? "DATES_BLOCKED" : "DATES_BOOKED",
+          message: "The property is not available for the selected dates.",
+          checkin,
+          checkout,
+          nights,
+          minimumNights,
+          currency: property.pricing.currency || "AUD",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      data: {
+        propertyId,
+        available: true,
+        checkin,
+        checkout,
+        nights,
+        guests,
+        minimumNights,
+        currency: property.pricing.currency || "AUD",
+        message: "The property is available for the selected dates.",
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { checkAvailability };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\booking.controller.js ==========
+
+
+const Property = require('../models/Property')
+const Booking = require('../models/Booking')
+const BlockedDate = require('../models/BlockedDate')
+const { calculateQuote } = require('../utils/pricing')
+const crypto = require('crypto')
+
+const HOLD_MINUTES = 15
+
+function parseDateOnly(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`)
+
+  return date.toISOString().slice(0, 10) === value ? date : null
+}
+
+function validGuest(guest) {
+  if (!guest || typeof guest !== 'object' || Array.isArray(guest)) {
+    return false
+  }
+
+  const required = [
+    'firstName',
+    'lastName',
+    'email',
+    'phone',
+    'address',
+    'city',
+    'zip',
+    'country',
+  ]
+
+  return required.every(
+    (key) => typeof guest[key] === 'string' && guest[key].trim()
+  )
+}
+
+async function createBooking(req, res, next) {
+  try {
+    const {
+      propertyId,
+      guest,
+      checkin,
+      checkout,
+      guests,
+      marketing = false,
+    } = req.body
+
+    if (
+      typeof propertyId !== 'string' ||
+      !propertyId.trim() ||
+      !validGuest(guest) ||
+      !Number.isInteger(guests) ||
+      guests < 1 ||
+      typeof marketing !== 'boolean'
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_BOOKING_DETAILS',
+          message: 'Please provide valid guest and booking details.',
+        },
+      })
+    }
+
+    const start = parseDateOnly(checkin)
+    const end = parseDateOnly(checkout)
+    const today = new Date(
+      `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`
+    )
+
+    if (!start || !end || end <= start || start < today) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_BOOKING_DATES',
+          message: 'Check-in and check-out dates are invalid.',
+        },
+      })
+    }
+
+    const property = await Property.findOne({
+        propertyId,
+        isActive: true,
+        isPlaceholder: false,
+        pricingConfigured: true,
+    }).lean()
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'PROPERTY_NOT_BOOKABLE',
+          message: 'This property is not available for booking.',
+        },
+      })
+    }
+
+    if (guests > property.guests) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'GUEST_LIMIT_EXCEEDED',
+          message: `This property allows up to ${property.guests} guests.`,
+        },
+      })
+    }
+
+    const now = new Date()
+
+    const blocked = await BlockedDate.findOne({
+      property: property._id,
+      startDate: { $lt: end },
+      endDate: { $gt: start },
+    }).lean()
+
+    if (blocked) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'DATES_UNAVAILABLE',
+          message: 'These dates are unavailable. Please choose different dates.',
+        },
+      })
+    }
+
+    const conflict = await Booking.findOne({
+      property: property._id,
+      checkin: { $lt: end },
+      checkout: { $gt: start },
+      $or: [
+        { status: 'confirmed' },
+        {
+          status: 'pending',
+          holdExpiresAt: { $gt: now },
+        },
+      ],
+    }).lean()
+
+    if (conflict) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'DATES_UNAVAILABLE',
+          message: 'These dates have just become unavailable.',
+        },
+      })
+    }
+
+    // Always calculate the authoritative price on the server.
+    const quote = calculateQuote(property, start, end, guests)
+
+    const nights = Math.round((end - start) / 86400000)
+    const holdExpiresAt = new Date(
+      Date.now() + HOLD_MINUTES * 60 * 1000
+    )
+
+    const booking = await Booking.create({
+      reference: `AV-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
+      property: property._id,
+      propertyId: property.propertyId,
+      guest: {
+        ...guest,
+        firstName: guest.firstName.trim(),
+        lastName: guest.lastName.trim(),
+        email: guest.email.trim().toLowerCase(),
+        phone: guest.phone.trim(),
+        address: guest.address.trim(),
+        address2: typeof guest.address2 === 'string' ? guest.address2.trim() : '',
+        city: guest.city.trim(),
+        zip: guest.zip.trim(),
+        state: typeof guest.state === 'string' ? guest.state.trim() : '',
+        country: guest.country.trim(),
+      },
+      checkin: start,
+      checkout: end,
+      nights,
+      guests,
+      priceBreakdown: quote.priceBreakdown,
+      status: 'pending',
+      payment: {
+        provider: 'stripe',
+        sessionId: null,
+        paymentIntentId: null,
+        status: 'unpaid',
+        paidAt: null,
+        refundedAmount: 0,
+      },
+      holdExpiresAt,
+    })
+
+    return res.status(201).json({
+      success: true,
+      message: 'Booking hold created. Payment is not yet completed.',
+      data: {
+        bookingId: booking._id,
+        reference: booking.reference,
+        propertyId: booking.propertyId,
+        checkin,
+        checkout,
+        nights,
+        guests,
+        priceBreakdown: booking.priceBreakdown,
+        status: booking.status,
+        paymentStatus: booking.paymentStatus,
+        holdExpiresAt: booking.holdExpiresAt,
+      },
+    })
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BOOKING_VALIDATION_FAILED',
+          message: error.message,
+        },
+      })
+    }
+
+    next(error)
+  }
+}
+
+module.exports = { createBooking }
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\contact.controller.js ==========
+
+
+const { sendEmail } = require("../config/email");
+
+async function submitContact(req, res, next) {
+  try {
+    const { name, email, subject, message, website } = req.body || {};
+
+    // Silently ignore submissions caught by the spam trap.
+    if (website) {
+      return res.status(200).json({
+        success: true,
+        message: "Message received.",
+      });
+    }
+
+    // Validate required fields.
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof email !== "string" ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+      typeof message !== "string" ||
+      message.trim().length < 10
+    ) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Please provide a valid name, email, and message.",
+        },
+      });
+    }
+
+    // Validate field lengths.
+    if (
+      name.length > 100 ||
+      email.length > 254 ||
+      (subject !== undefined &&
+        (typeof subject !== "string" || subject.length > 200)) ||
+      message.length > 5000
+    ) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "One or more fields exceed the allowed length.",
+        },
+      });
+    }
+
+    const recipient =
+      process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
+
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const cleanSubject =
+      typeof subject === "string" && subject.trim()
+        ? subject.trim()
+        : "General enquiry";
+    const cleanMessage = message.trim();
+
+    // Respond immediately, without waiting for SMTP.
+    res.status(200).json({
+      success: true,
+      message: "Your message has been received.",
+    });
+
+    // Attempt email delivery in the background.
+    setImmediate(() => {
+      sendEmail({
+        to: recipient,
+        replyTo: cleanEmail,
+        subject: `Website contact: ${cleanSubject}`,
+        text: [
+          "A new contact form message was received.",
+          "",
+          `Name: ${cleanName}`,
+          `Email: ${cleanEmail}`,
+          `Subject: ${cleanSubject}`,
+          "",
+          "Message:",
+          cleanMessage,
+        ].join("\n"),
+      }).catch((error) => {
+        console.error("Contact email delivery failed:", error);
+      });
+    });
+  } catch (error) {
+    if (res.headersSent) {
+      return next(error);
+    }
+
+    return next(error);
+  }
+}
+
+module.exports = { submitContact };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\inquiry.controller.js ==========
+
+
+const { sendEmail } = require("../config/email");
+const Inquiry = require("../models/Inquiry");
+const Property = require("../models/Property");
+
+function sendError(res, status, code, message, fields) {
+  return res.status(status).json({
+    error: {
+      code,
+      message,
+      ...(fields ? { fields } : {}),
+    },
+  });
+}
+
+function parseOptionalDate(value, field, errors) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    errors[field] = "Use the YYYY-MM-DD date format.";
+    return null;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    errors[field] = "Enter a valid date.";
+    return null;
+  }
+
+  return date;
+}
+
+async function sendInquiryEmails({
+  inquiryId,
+  companyEmail,
+  guestEmail,
+  propertyTitle,
+  propertyId,
+  guest,
+  checkin,
+  checkout,
+  guests,
+  marketingOptIn,
+}) {
+  const guestName = `${guest.firstName} ${guest.lastName}`;
+
+  const dateText =
+    checkin && checkout
+      ? `Check-in: ${checkin.toISOString().slice(0, 10)}\nCheck-out: ${checkout.toISOString().slice(0, 10)}`
+      : "Dates: Not specified";
+
+  const companyText = [
+    "A new property inquiry has been received.",
+    "",
+    `Inquiry ID: ${inquiryId}`,
+    `Property ID: ${propertyId}`,
+    `Property: ${propertyTitle}`,
+    `Guest: ${guestName}`,
+    `Email: ${guest.email}`,
+    `Phone: ${guest.dialCode} ${guest.phone}`,
+    `Travelling from: ${guest.city}, ${guest.state || ""}, ${guest.country}`,
+    dateText,
+    `Guests: ${guests}`,
+    `Message: ${guest.message || "No message provided"}`,
+    `Marketing opt-in: ${marketingOptIn ? "Yes" : "No"}`,
+  ].join("\n");
+
+  const guestText = [
+    `Hi ${guest.firstName},`,
+    "",
+    "Thank you for contacting Avanta Living.",
+    "We've received your inquiry and our team will review it and get back to you.",
+    "",
+    `Property: ${propertyTitle}`,
+    `Property ID: ${propertyId}`,
+    dateText,
+    "",
+    "This is an inquiry acknowledgement, not a booking confirmation. Your dates have not been reserved.",
+    "",
+    "Kind regards,",
+    "Avanta Living",
+  ].join("\n");
+
+  const emailResults = await Promise.allSettled([
+    sendEmail({
+      to: companyEmail,
+      subject: `New property inquiry — ${propertyTitle}`,
+      text: companyText,
+    }),
+    sendEmail({
+      to: guestEmail,
+      subject: "We've received your Avanta Living inquiry",
+      text: guestText,
+    }),
+  ]);
+
+  const allEmailsSent = emailResults.every(
+    (result) => result.status === "fulfilled"
+  );
+
+  const emailStatus = allEmailsSent ? "sent" : "failed";
+
+  if (!allEmailsSent) {
+    console.error(
+      "Inquiry email delivery failed:",
+      emailResults
+        .map((result) =>
+          result.status === "rejected"
+            ? result.reason?.message || "Unknown email error"
+            : null
+        )
+        .filter(Boolean)
+    );
+  }
+
+  await Inquiry.findByIdAndUpdate(inquiryId, { emailStatus });
+
+  console.log(`Inquiry ${inquiryId}: email status ${emailStatus}`);
+}
+
+async function createInquiry(req, res, next) {
+  try {
+    const body = req.body || {};
+    const guest = body.guest;
+    const errors = {};
+
+    if (
+      typeof body.propertyId !== "string" ||
+      !body.propertyId.trim() ||
+      body.propertyId.length > 100
+    ) {
+      errors.propertyId = "A valid property ID is required.";
+    }
+
+    if (!guest || typeof guest !== "object" || Array.isArray(guest)) {
+      errors.guest = "Guest details are required.";
+    }
+
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "city",
+      "country",
+    ];
+
+    if (guest && typeof guest === "object" && !Array.isArray(guest)) {
+      for (const field of requiredFields) {
+        if (
+          typeof guest[field] !== "string" ||
+          !guest[field].trim()
+        ) {
+          errors[field] = `${field} is required.`;
+        }
+      }
+
+      if (
+        typeof guest.email === "string" &&
+        guest.email.trim() &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest.email.trim())
+      ) {
+        errors.email = "Enter a valid email address.";
+      }
+
+      const maxLengths = {
+        firstName: 100,
+        lastName: 100,
+        email: 254,
+        phone: 30,
+        city: 100,
+        state: 100,
+        country: 100,
+        message: 3000,
+        dialCode: 10,
+      };
+
+      for (const [field, max] of Object.entries(maxLengths)) {
+        if (
+          guest[field] !== undefined &&
+          (typeof guest[field] !== "string" ||
+            guest[field].length > max)
+        ) {
+          errors[field] =
+            `${field} must be a string with at most ${max} characters.`;
+        }
+      }
+    }
+
+    const checkin = parseOptionalDate(body.checkin, "checkin", errors);
+    const checkout = parseOptionalDate(body.checkout, "checkout", errors);
+
+    if (Boolean(body.checkin) !== Boolean(body.checkout)) {
+      errors.dates =
+        "Provide both check-in and check-out dates, or neither.";
+    }
+
+    if (checkin && checkout && checkout <= checkin) {
+      errors.checkout = "Check-out must be after check-in.";
+    }
+
+    const guests = Number(body.guests);
+
+    if (!Number.isInteger(guests) || guests < 1 || guests > 100) {
+      errors.guests =
+        "Guest count must be a whole number between 1 and 100.";
+    }
+
+    if (
+      body.marketing !== undefined &&
+      typeof body.marketing !== "boolean"
+    ) {
+      errors.marketing = "Marketing consent must be true or false.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Please check the submitted information.",
+        errors
+      );
+    }
+
+    const property = await Property.findOne({
+      propertyId: body.propertyId.trim(),
+      isActive: true,
+      isPlaceholder: false,
+    });
+
+    if (!property) {
+      return sendError(
+        res,
+        404,
+        "PROPERTY_NOT_FOUND",
+        "This property is unavailable or could not be found."
+      );
+    }
+
+    if (guests > property.guests) {
+      return sendError(
+        res,
+        400,
+        "GUEST_LIMIT_EXCEEDED",
+        `This property accommodates up to ${property.guests} guests.`,
+        { guests: "Guest count exceeds this property's capacity." }
+      );
+    }
+
+    const inquiry = await Inquiry.create({
+      property: property._id,
+      propertyId: property.propertyId,
+      guest: {
+        firstName: guest.firstName.trim(),
+        lastName: guest.lastName.trim(),
+        email: guest.email.trim().toLowerCase(),
+        dialCode: guest.dialCode?.trim() || "+61",
+        phone: guest.phone.trim(),
+        city: guest.city.trim(),
+        state: guest.state?.trim() || "",
+        country: guest.country.trim(),
+        message: guest.message?.trim() || "",
+      },
+      checkin,
+      checkout,
+      guests,
+      marketingOptIn: body.marketing === true,
+      status: "new",
+      ip: req.ip || null,
+      userAgent: req.get("user-agent")?.slice(0, 500) || null,
+      emailStatus: "pending",
+    });
+
+    const companyEmail =
+      process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
+
+    res.status(201).json({
+      data: {
+        id: inquiry._id,
+        propertyId: inquiry.propertyId,
+        status: inquiry.status,
+        emailStatus: inquiry.emailStatus,
+        createdAt: inquiry.createdAt,
+      },
+    });
+
+    setImmediate(() => {
+      sendInquiryEmails({
+        inquiryId: inquiry._id,
+        companyEmail,
+        guestEmail: inquiry.guest.email,
+        propertyTitle: property.title,
+        propertyId: inquiry.propertyId,
+        guest: inquiry.guest,
+        checkin: inquiry.checkin,
+        checkout: inquiry.checkout,
+        guests: inquiry.guests,
+        marketingOptIn: inquiry.marketingOptIn,
+      }).catch((error) => {
+        console.error(
+          `Failed to process emails for inquiry ${inquiry._id}:`,
+          error
+        );
+
+        Inquiry.findByIdAndUpdate(inquiry._id, {
+          emailStatus: "failed",
+        }).catch((updateError) => {
+          console.error(
+            "Failed to update inquiry email status:",
+            updateError
+          );
+        });
+      });
+    });
+  } catch (error) {
+    if (res.headersSent) {
+      return next(error);
+    }
+
+    return next(error);
+  }
+}
+
+module.exports = { createInquiry };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\payment.controller.js ==========
+
+
+const Stripe = require('stripe')
+const Booking = require('../models/Booking')
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+exports.createCheckoutSession = async (req, res, next) => {
+  try {
+    const { bookingId } = req.body
+
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BOOKING_ID_REQUIRED',
+          message: 'Booking ID is required.',
+        },
+      })
+    }
+
+    const booking = await Booking.findById(bookingId)
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BOOKING_NOT_FOUND',
+          message: 'Booking was not found.',
+        },
+      })
+    }
+
+    if (
+      booking.status !== 'pending' ||
+      booking.payment?.status !== 'unpaid'
+    ) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'BOOKING_NOT_PAYABLE',
+          message: 'This booking is not available for payment.',
+        },
+      })
+    }
+
+    if (
+      !booking.holdExpiresAt ||
+      new Date(booking.holdExpiresAt) <= new Date()
+    ) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'BOOKING_HOLD_EXPIRED',
+          message: 'This booking hold has expired. Please book again.',
+        },
+      })
+    }
+
+    const amount = Number(booking.priceBreakdown?.total)
+    const currency = String(
+      booking.priceBreakdown?.currency || 'AUD'
+    ).toLowerCase()
+
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      !/^[a-z]{3}$/.test(currency)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_BOOKING_TOTAL',
+          message: 'The saved booking total is invalid.',
+        },
+      })
+    }
+
+    // Stripe expects the amount in the currency's smallest unit.
+    // AUD uses cents.
+    const unitAmount = Math.round(amount * 100)
+
+    if (unitAmount < 1) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_PAYMENT_AMOUNT',
+          message: 'The payment amount is too small.',
+        },
+      })
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL
+
+    if (!frontendUrl) {
+      throw new Error('FRONTEND_URL is not configured')
+    }
+
+    
+    // Stripe Checkout requires an explicit expiry to be at least
+    // 30 minutes after session creation. Use a 31-minute window.
+    const checkoutExpiresAt = Math.floor(
+      (Date.now() + 31 * 60 * 1000) / 1000
+    )
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: booking.guest.email,
+      client_reference_id: String(booking._id),
+      metadata: {
+        bookingId: String(booking._id),
+        bookingReference: booking.reference,
+      },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency,
+            unit_amount: unitAmount,
+            product_data: {
+              name: `Avanta Living booking ${booking.reference}`,
+              description: `${booking.nights} night(s)`,
+            },
+          },
+        },
+      ],
+      success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/payment/cancelled?booking_id=${booking._id}`,
+      expires_at: checkoutExpiresAt,
+    })
+
+    booking.payment.sessionId = session.id
+    booking.holdExpiresAt = new Date(checkoutExpiresAt * 1000)
+
+    await booking.save()
+
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        checkoutUrl: session.url,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+
+exports.getCheckoutStatus = async (req, res, next) => {
+  try {
+    const { sessionId } = req.params
+
+    if (
+      !sessionId ||
+      !/^cs_(test|live)_[a-zA-Z0-9]+$/.test(sessionId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_SESSION_ID',
+          message: 'A valid Checkout Session ID is required.',
+        },
+      })
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+    if (session.payment_status !== 'paid') {
+      return res.status(200).json({
+        success: true,
+        data: {
+          paid: false,
+          confirmed: false,
+          message: 'Payment has not been confirmed yet.',
+        },
+      })
+    }
+
+    const bookingId = session.metadata?.bookingId
+
+    if (!bookingId) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BOOKING_NOT_FOUND',
+          message: 'No booking is associated with this session.',
+        },
+      })
+    }
+
+    const booking = await Booking.findById(bookingId)
+
+    if (
+      !booking ||
+      booking.payment?.sessionId !== session.id ||
+      booking.payment?.status !== 'paid' ||
+      booking.status !== 'confirmed'
+    ) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          paid: false,
+          confirmed: false,
+          message: 'Booking confirmation is still processing.',
+        },
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        paid: true,
+        confirmed: true,
+        reference: booking.reference,
+        propertyId: booking.propertyId,
+        checkin: booking.checkin,
+        checkout: booking.checkout,
+        nights: booking.nights,
+        guests: booking.guests,
+        priceBreakdown: booking.priceBreakdown,
+        paidAt: booking.payment.paidAt,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\paymentWebhook.controller.js ==========
+
+const Stripe = require('stripe')
+const Booking = require('../models/Booking')
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+exports.handleStripeWebhook = async (req, res) => {
+  const signature = req.headers['stripe-signature']
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured')
+    return res.status(500).send('Webhook is not configured')
+  }
+
+  let event
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      webhookSecret
+    )
+  } catch (error) {
+    console.error('Stripe webhook signature verification failed:', error.message)
+    return res.status(400).send('Invalid webhook signature')
+  }
+
+  try {
+    const isSuccessfulEvent =
+      event.type === 'checkout.session.completed' ||
+      event.type === 'checkout.session.async_payment_succeeded'
+
+    if (!isSuccessfulEvent) {
+      return res.status(200).json({ received: true })
+    }
+
+    const session = event.data.object
+
+    if (session.payment_status !== 'paid') {
+      return res.status(200).json({ received: true })
+    }
+
+    const bookingId = session.metadata?.bookingId
+
+    if (!bookingId) {
+      console.error('Stripe Checkout Session has no bookingId metadata')
+      return res.status(200).json({ received: true })
+    }
+
+    const booking = await Booking.findById(bookingId)
+
+    if (!booking) {
+      console.error('Booking not found for Stripe session:', session.id)
+      return res.status(200).json({ received: true })
+    }
+
+    if (booking.payment?.sessionId !== session.id) {
+      console.error('Stripe session does not match booking:', booking.reference)
+      return res.status(200).json({ received: true })
+    }
+
+    if (
+      booking.payment?.status === 'paid' &&
+      booking.status === 'confirmed'
+    ) {
+      return res.status(200).json({ received: true })
+    }
+
+    if (booking.status !== 'pending') {
+      console.error(
+        'Paid Stripe session received for a non-pending booking:',
+        booking.reference
+      )
+      return res.status(200).json({ received: true })
+    }
+
+    booking.payment.status = 'paid'
+    booking.payment.paymentIntentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null
+    booking.payment.paidAt = new Date()
+
+    booking.status = 'confirmed'
+
+    await booking.save()
+
+    return res.status(200).json({ received: true })
+  } catch (error) {
+    console.error('Stripe webhook processing failed:', error)
+    return res.status(500).send('Webhook processing failed')
+  }
+}
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\pricing.controller.js ==========
+
+
+const Property = require("../models/Property");
+const { calculateQuote } = require("../utils/pricing");
+const Booking = require("../models/Booking");
+const BlockedDate = require("../models/BlockedDate");
+
+function parseDateOnly(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== value
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+async function getQuote(req, res, next) {
+  try {
+    const { propertyId } = req.params;
+    const { checkin, checkout } = req.query;
+    const guests = Number(req.query.guests);
+
+    const startDate = parseDateOnly(checkin);
+    const endDate = parseDateOnly(checkout);
+
+    if (!startDate || !endDate || endDate <= startDate) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_DATES",
+          message: "Provide valid check-in and check-out dates.",
+        },
+      });
+    }
+
+    if (!Number.isInteger(guests) || guests < 1 || guests > 100) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_GUEST_COUNT",
+          message: "Guests must be a whole number between 1 and 100.",
+        },
+      });
+    }
+
+    const property = await Property.findOne({
+      propertyId,
+      isActive: true,
+      isPlaceholder: false,
+      pricingConfigured: true,
+    }).lean();
+
+    if (!property) {
+      return res.status(404).json({
+        error: {
+          code: "PROPERTY_NOT_BOOKABLE",
+          message: "This property is not configured for booking.",
+        },
+      });
+    }
+
+    if (guests > property.guests) {
+      return res.status(400).json({
+        error: {
+          code: "GUEST_CAPACITY_EXCEEDED",
+          message: `This property accommodates a maximum of ${property.guests} guests.`,
+        },
+      });
+    }
+
+    
+    const now = new Date();
+
+    const [blockedDate, conflictingBooking] = await Promise.all([
+    BlockedDate.findOne({
+        property: property._id,
+        startDate: { $lt: endDate },
+        endDate: { $gt: startDate },
+    })
+        .select("_id type")
+        .lean(),
+
+    Booking.findOne({
+        property: property._id,
+        checkin: { $lt: endDate },
+        checkout: { $gt: startDate },
+        $or: [
+        { status: "confirmed" },
+        {
+            status: "pending",
+            holdExpiresAt: { $gt: now },
+        },
+        ],
+    })
+        .select("_id status")
+        .lean(),
+    ]);
+
+    if (blockedDate || conflictingBooking) {
+    return res.status(409).json({
+        error: {
+        code: "DATES_UNAVAILABLE",
+        message: "This property is not available for the selected dates.",
+        },
+    });
+    }
+
+
+    const { nights, priceBreakdown } = calculateQuote(
+      property,
+      startDate,
+      endDate,
+      guests
+    );
+
+    return res.status(200).json({
+      data: {
+        propertyId,
+        checkin,
+        checkout,
+        guests,
+        nights,
+        priceBreakdown,
+      },
+    });
+  } catch (error) {
+    if (
+      error.message === "This property is not configured for booking." ||
+      error.message === "A valid nightly rate has not been configured." ||
+      error.message === "The cleaning fee configuration is invalid." ||
+      error.message === "The minimum-night configuration is invalid." ||
+      error.message === "The guest count is invalid for this property." ||
+      error.message === "Check-out must be after check-in." ||
+      error.message.startsWith("This property requires a minimum stay") ||
+      error.message.startsWith("A nightly rate configuration is invalid.") ||
+      error.message.startsWith("Unsupported fee calculation")
+    ) {
+      return res.status(400).json({
+        error: {
+          code: "QUOTE_VALIDATION_FAILED",
+          message: error.message,
+        },
+      });
+    }
+
+    return next(error);
+  }
+}
+
+module.exports = { getQuote };
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\property.controller.js ==========
+
+
+const Property = require("../models/Property");
+
+const getProperties = async (req, res, next) => {
+  try {
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 12);
+
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 24
+    ) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_PAGINATION",
+          message: "Page must be positive and limit must be between 1 and 24."
+        }
+      });
+    }
+
+    const filter = {
+      isActive: true,
+      isPlaceholder: false
+    };
+
+    if (req.query.guests !== undefined) {
+      const guests = Number(req.query.guests);
+
+      if (!Number.isInteger(guests) || guests < 1) {
+        return res.status(400).json({
+          error: {
+            code: "INVALID_GUESTS",
+            message: "Guests must be a positive integer."
+          }
+        });
+      }
+
+      filter.guests = { $gte: guests };
+    }
+
+    if (req.query.bedrooms !== undefined) {
+      const bedrooms = Number(req.query.bedrooms);
+
+      if (!Number.isInteger(bedrooms) || bedrooms < 0) {
+        return res.status(400).json({
+          error: {
+            code: "INVALID_BEDROOMS",
+            message: "Bedrooms must be a non-negative integer."
+          }
+        });
+      }
+
+      filter.bedrooms = { $gte: bedrooms };
+    }
+
+    if (req.query.featured !== undefined) {
+      if (!["true", "false"].includes(req.query.featured)) {
+        return res.status(400).json({
+          error: {
+            code: "INVALID_FEATURED",
+            message: "Featured must be true or false."
+          }
+        });
+      }
+
+      filter.isFeatured = req.query.featured === "true";
+    }
+
+    const sortOptions = {
+      recommended: { sortOrder: 1, createdAt: -1 },
+      rating: { rating: -1, sortOrder: 1 },
+      newest: { createdAt: -1 }
+    };
+
+    const sortName = req.query.sort || "recommended";
+
+    if (!sortOptions[sortName]) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_SORT",
+          message: "Sort must be recommended, rating, or newest."
+        }
+      });
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [properties, total] = await Promise.all([
+      Property.find(filter)
+        .select("-createdBy -updatedBy -__v")
+        .sort(sortOptions[sortName])
+        .skip(skip)
+        .limit(limit)
+        .lean(false),
+
+      Property.countDocuments(filter)
+    ]);
+
+    return res.status(200).json({
+      data: properties,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPreviousPage: page > 1
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+const getPropertyById = async (req, res, next) => {
+  try {
+    const propertyId = req.params.id.trim();
+
+    if (!propertyId) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_PROPERTY_ID",
+          message: "A valid property ID is required."
+        }
+      });
+    }
+
+    const property = await Property.findOne({
+      propertyId,
+      isActive: true,
+      isPlaceholder: false
+    }).select("-createdBy -updatedBy -__v");
+
+    if (!property) {
+      return res.status(404).json({
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "The requested property was not found."
+        }
+      });
+    }
+
+    return res.status(200).json({
+      data: property
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+module.exports = {
+  getProperties,
+  getPropertyById,
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\PropertyAssessment.controller.js ==========
+
+
+const { sendEmail } = require("../config/email");
+
+const PROPERTY_TYPES = [
+  "My entire vacation home (or condo)",
+  "I have more than one property type",
+  "No property yet, but I'm looking to buy",
+  "My primary residence",
+  "My timeshare",
+  "A private room in my home",
+  "A guesthouse with a private entrance",
+  "My unique property (treehouse, glamp site, etc.)",
+  "Other",
+];
+
+const MANAGEMENT_TYPES = [
+  "I self-manage my property",
+  "I use a property manager",
+  "Nobody. I've never rented it out before",
+];
+
+const AVAILABILITY_OPTIONS = [
+  "Under 10% (0-4 weeks)",
+  "10-50% (5-26 weeks)",
+  "50-90% (26-47 weeks)",
+  "90%+ (Over 47 weeks)",
+];
+
+const REVENUE_OPTIONS = [
+  "$50,000 or less",
+  "$50,000-$75,000",
+  "$75,000-$100,000",
+  "$100,000+",
+];
+
+function sendError(res, status, code, message, fields) {
+  return res.status(status).json({
+    success: false,
+    error: {
+      code,
+      message,
+      ...(fields ? { fields } : {}),
+    },
+  });
+}
+
+async function verifyCaptcha(token) {
+  if (!process.env.RECAPTCHA_SECRET_KEY) {
+    throw new Error("reCAPTCHA server configuration is missing.");
+  }
+
+  const response = await fetch(
+    "https://www.google.com/recaptcha/api/siteverify",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret: process.env.RECAPTCHA_SECRET_KEY,
+        response: token,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Unable to verify reCAPTCHA.");
+  }
+
+  const result = await response.json();
+
+  return result.success === true;
+}
+
+function buildCompanyEmail(data) {
+  return [
+    "A new property assessment request has been received.",
+    "",
+    "PROPERTY INFORMATION",
+    "--------------------",
+    `Property type: ${data.propertyType}`,
+    `Management: ${data.managementType}`,
+    `Rental availability: ${data.availability}`,
+    `Annual gross revenue: ${data.annualRevenue}`,
+    "",
+    "PROPERTY DETAILS",
+    "----------------",
+    `Bedrooms: ${data.bedrooms}`,
+    `Address: ${data.address}`,
+    "",
+    "CONTACT INFORMATION",
+    "-------------------",
+    `Name: ${data.firstName} ${data.lastName}`,
+    `Email: ${data.email}`,
+    `Phone: ${data.phone}`,
+    "",
+    `Submitted at: ${new Date().toISOString()}`,
+  ].join("\n");
+}
+
+function buildCustomerEmail(data) {
+  return [
+    `Hi ${data.firstName},`,
+    "",
+    "Thank you for your interest in Avanta Living's landlord partnership program.",
+    "",
+    "We have received your property assessment request successfully.",
+    "Our team will review your property details and contact you soon.",
+    "",
+    "YOUR SUBMISSION",
+    "---------------",
+    `Property type: ${data.propertyType}`,
+    `Bedrooms: ${data.bedrooms}`,
+    `Address: ${data.address}`,
+    "",
+    "This is an acknowledgement of your enquiry, not a confirmation of a property assessment or partnership.",
+    "",
+    "Kind regards,",
+    "Avanta Living",
+  ].join("\n");
+}
+
+async function createPropertyAssessment(req, res, next) {
+  try {
+    const body = req.body || {};
+    const errors = {};
+
+    const fields = [
+      "propertyType",
+      "managementType",
+      "availability",
+      "annualRevenue",
+      "address",
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+    ];
+    if (process.env.NODE_ENV === "production") {
+      fields.push("captchaToken");
+    }
+
+    for (const field of fields) {
+      if (
+        typeof body[field] !== "string" ||
+        !body[field].trim()
+      ) {
+        errors[field] = `${field} is required.`;
+      }
+    }
+
+    const bedroomCount = Number(body.bedrooms);
+
+    if (
+      body.bedrooms === undefined ||
+      body.bedrooms === null ||
+      body.bedrooms === "" ||
+      !Number.isInteger(bedroomCount) ||
+      bedroomCount < 0 ||
+      bedroomCount > 100
+    ) {
+      errors.bedrooms = "Enter a valid bedroom count.";
+    }
+
+    if (
+      typeof body.propertyType === "string" &&
+      !PROPERTY_TYPES.includes(body.propertyType.trim())
+    ) {
+      errors.propertyType = "Select a valid property type.";
+    }
+
+    if (
+      typeof body.managementType === "string" &&
+      !MANAGEMENT_TYPES.includes(body.managementType.trim())
+    ) {
+      errors.managementType = "Select a valid management option.";
+    }
+
+    if (
+      typeof body.availability === "string" &&
+      !AVAILABILITY_OPTIONS.includes(body.availability.trim())
+    ) {
+      errors.availability = "Select a valid availability option.";
+    }
+
+    if (
+      typeof body.annualRevenue === "string" &&
+      !REVENUE_OPTIONS.includes(body.annualRevenue.trim())
+    ) {
+      errors.annualRevenue = "Select a valid revenue option.";
+    }
+
+    const email =
+      typeof body.email === "string"
+        ? body.email.trim().toLowerCase()
+        : "";
+
+    if (
+      email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      errors.email = "Enter a valid email address.";
+    }
+
+    const phone =
+      typeof body.phone === "string" ? body.phone.trim() : "";
+
+    if (phone && !/^[+()\d\s-]{7,30}$/.test(phone)) {
+      errors.phone = "Enter a valid phone number.";
+    }
+
+    const maxLengths = {
+      propertyType: 150,
+      managementType: 100,
+      availability: 100,
+      annualRevenue: 50,
+      address: 1000,
+      firstName: 100,
+      lastName: 100,
+      email: 254,
+      phone: 30,
+      captchaToken: 5000,
+    };
+
+    for (const [field, max] of Object.entries(maxLengths)) {
+      if (
+        typeof body[field] === "string" &&
+        body[field].length > max
+      ) {
+        errors[field] = `${field} exceeds the maximum allowed length.`;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return sendError(
+        res,
+        400,
+        "VALIDATION_ERROR",
+        "Please check the submitted information.",
+        errors
+      );
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      const captchaValid = await verifyCaptcha(
+        body.captchaToken.trim()
+      );
+
+      if (!captchaValid) {
+        return sendError(
+          res,
+          400,
+          "CAPTCHA_FAILED",
+          "reCAPTCHA verification failed. Please try again."
+        );
+      }
+    }
+
+    const assessment = {
+      propertyType: body.propertyType.trim(),
+      managementType: body.managementType.trim(),
+      availability: body.availability.trim(),
+      annualRevenue: body.annualRevenue.trim(),
+      bedrooms: bedroomCount,
+      address: body.address.trim(),
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
+      email,
+      phone,
+    };
+
+    const companyEmail =
+      process.env.CONTACT_EMAIL || "Hello.avantaliving@gmail.com";
+
+    const companyResult = await sendEmail({
+      to: companyEmail,
+      subject: `New Property Assessment — ${assessment.firstName} ${assessment.lastName}`,
+      text: buildCompanyEmail(assessment),
+      replyTo: assessment.email,
+    });
+
+    console.log(
+      "Property assessment notification sent:",
+      companyResult.messageId
+    );
+
+    let customerEmailSent = false;
+
+    try {
+      const customerResult = await sendEmail({
+        to: assessment.email,
+        subject: "We received your Avanta Living property assessment request",
+        text: buildCustomerEmail(assessment),
+      });
+
+      customerEmailSent = true;
+
+      console.log(
+        "Property assessment acknowledgement sent:",
+        customerResult.messageId
+      );
+    } catch (emailError) {
+      console.error(
+        "Customer acknowledgement email failed:",
+        emailError.message
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Your property assessment request has been submitted successfully.",
+      data: {
+        notificationSent: true,
+        acknowledgementSent: customerEmailSent,
+      },
+    });
+  } catch (error) {
+    console.error("Property assessment submission error:", error);
+
+    if (error.message === "reCAPTCHA server configuration is missing.") {
+      return sendError(
+        res,
+        500,
+        "CAPTCHA_CONFIGURATION_ERROR",
+        "The verification service is not configured."
+      );
+    }
+
+    if (error.message === "Unable to verify reCAPTCHA.") {
+      return sendError(
+        res,
+        503,
+        "CAPTCHA_SERVICE_UNAVAILABLE",
+        "Unable to verify your request right now. Please try again."
+      );
+    }
+
+    if (error.message === "SMTP is not configured.") {
+      return sendError(
+        res,
+        503,
+        "EMAIL_CONFIGURATION_ERROR",
+        "The email service is currently unavailable."
+      );
+    }
+
+    return next(error);
+  }
+}
+
+module.exports = { createPropertyAssessment };
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\service.controller.js ==========
+
+
+const ServiceCard = require("../models/ServiceCard");
+
+const getServices = async (req, res, next) => {
+  try {
+    const services = await ServiceCard.find({
+      isPublished: true
+    })
+      .select("title text order")
+      .sort({ order: 1, createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      data: services
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getServices
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\controller\testimonial.controller.js ==========
+
+
+const Testimonial = require("../models/Testimonial");
+
+const getTestimonials = async (req, res, next) => {
+  try {
+    const testimonials = await Testimonial.find({
+      isPublished: true,
+      isPlaceholder: { $ne: true }
+    })
+      .select("name role image quote order")
+      .sort({ order: 1, createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      data: testimonials
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getTestimonials
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\data\seedData.js ==========
+
+
+const properties = [
+  {
+    propertyId: "441841",
+    title: "AccorView Luxury 1BR Suite | Pool • Gym • Parking",
+    slug: "accorview-luxury-1br-suite",
+    location: "Lidcombe",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: [
+      "Enjoy a modern one-bedroom suite with views towards Accor Stadium.",
+      "Full property description to be confirmed with the property owner."
+    ],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-1/800/1000",
+        alt: "AccorView luxury suite",
+        order: 0
+      }
+    ],
+    guests: 4,
+    bedrooms: 1,
+    bathrooms: 1,
+    rating: 4.7,
+    amenities: ["Air conditioning", "Swimming pool", "Kitchen"],
+    amenityGroups: [
+      {
+        title: "General",
+        items: [
+          "Swimming pool",
+          "Gym",
+          "Essentials",
+          "Free parking",
+          "Suitable for children",
+          "Suitable for infants"
+        ]
+      },
+      {
+        title: "Tech & Comfort",
+        items: [
+          "Internet",
+          "Wireless",
+          "Air conditioning",
+          "Elevator",
+          "Heating",
+          "TV"
+        ]
+      },
+      {
+        title: "Kitchen",
+        items: [
+          "Kitchen",
+          "Toaster",
+          "Dishwasher",
+          "Microwave",
+          "Oven",
+          "Electric kettle"
+        ]
+      },
+      {
+        title: "Bedroom",
+        items: [
+          "Hangers",
+          "Iron",
+          "Linens",
+          "Clothing storage",
+          "Drying rack for clothing"
+        ]
+      },
+      {
+        title: "Bathroom",
+        items: [
+          "Hair Dryer",
+          "Shampoo",
+          "Hot water",
+          "Body soap",
+          "Conditioner",
+          "Shower gel"
+        ]
+      },
+      {
+        title: "Laundry",
+        items: ["Washing Machine", "Dryer", "Cleaning products"]
+      },
+      {
+        title: "Safety",
+        items: ["Smoke detector", "First aid kit", "Fire Extinguisher"]
+      },
+      {
+        title: "Extras",
+        items: ["Dining table", "Outdoor furniture", "Board games"]
+      },
+      {
+        title: "Policies",
+        items: [
+          "Private entrance",
+          "Long term stays allowed",
+          "Cleaning before checkout"
+        ]
+      }
+    ],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    cancellationPolicy: {
+      rules: [
+        { daysBeforeArrival: 14, refundPercentage: 100 },
+        { daysBeforeArrival: 7, refundPercentage: 50 }
+      ],
+      notes: "Cancellation terms require confirmation for cancellations less than 7 days before arrival."
+    },
+    timezone: "Australia/Sydney",
+    isActive: true,
+    isFeatured: true,
+    isPlaceholder: false,
+    sortOrder: 1
+  },
+  {
+    propertyId: "446510",
+    title: "Airport & CBD Access | 3BR + 2 Parking",
+    slug: "airport-cbd-access-3br",
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Full property description to be confirmed."],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-2/800/1000",
+        alt: "Airport and CBD access property",
+        order: 0
+      }
+    ],
+    guests: 8,
+    bedrooms: 3,
+    bathrooms: 2,
+    rating: 4.8,
+    amenities: ["Air conditioning", "Kitchen", "Washing Machine"],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: false,
+    sortOrder: 2
+  },
+  {
+    propertyId: "448789",
+    title: "The Blue Sanctuary | Pool, Sauna & Free Parking",
+    slug: "the-blue-sanctuary",
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Full property description to be confirmed."],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-3/800/1000",
+        alt: "The Blue Sanctuary property",
+        order: 0
+      }
+    ],
+    guests: 4,
+    bedrooms: 2,
+    bathrooms: 1,
+    rating: 4.4,
+    amenities: ["Air conditioning", "Swimming pool", "Kitchen"],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: false,
+    sortOrder: 3
+  },
+  {
+    propertyId: "451860",
+    title: "Harbour Lifestyle • Modern 1BR in Prime Spot",
+    slug: "harbour-lifestyle-modern-1br",
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Full property description to be confirmed."],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-4/800/1000",
+        alt: "Modern one-bedroom harbour property",
+        order: 0
+      }
+    ],
+    guests: 2,
+    bedrooms: 1,
+    bathrooms: 1,
+    rating: 4.5,
+    amenities: ["Air conditioning", "Kitchen", "Washing Machine"],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: false,
+    sortOrder: 4
+  },
+  {
+    propertyId: "460446",
+    title: "High-Rise Haven with Spectacular Skyline Views",
+    slug: "high-rise-haven-skyline-views",
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Full property description to be confirmed."],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-5/800/1000",
+        alt: "High-rise property with skyline views",
+        order: 0
+      }
+    ],
+    guests: 2,
+    bedrooms: 1,
+    bathrooms: 1,
+    rating: 4.7,
+    amenities: ["Air conditioning", "Kitchen", "Washing Machine"],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: false,
+    sortOrder: 5
+  },
+  {
+    propertyId: "469072",
+    title: "Resort-Style 2BR Escape Pool, Gym, Sauna, Parking",
+    slug: "resort-style-2br-escape",
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Full property description to be confirmed."],
+    images: [
+      {
+        url: "https://picsum.photos/seed/cozy-6/800/1000",
+        alt: "Resort-style two-bedroom property",
+        order: 0
+      }
+    ],
+    guests: 7,
+    bedrooms: 2,
+    bathrooms: 2,
+    rating: 4.8,
+    amenities: ["Air conditioning", "Swimming pool", "Kitchen"],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: false,
+    sortOrder: 6
+  },
+
+  ...[7, 8, 9, 10, 11, 12].map((number, index) => ({
+    propertyId: String(100000 + number),
+    title: `Sample Property ${number}`,
+    slug: `sample-property-${number}`,
+    location: "Sydney",
+    city: "Sydney",
+    state: "NSW",
+    country: "Australia",
+    description: ["Placeholder listing. Replace with verified property details."],
+    images: [
+      {
+        url: `https://picsum.photos/seed/cozy-${number}/800/1000`,
+        alt: `Sample property ${number}`,
+        order: 0
+      }
+    ],
+    guests: 2,
+    bedrooms: 1,
+    bathrooms: 1,
+    rating: 4.5,
+    amenities: [],
+    pricing: {
+      nightlyRate: null,
+      cleaningFee: 0,
+      minNights: 1,
+      currency: "AUD"
+    },
+    pricingConfigured: false,
+    isActive: true,
+    isFeatured: false,
+    isPlaceholder: true,
+    sortOrder: number
+  }))
+];
+
+const testimonials = [
+  {
+    name: "Stacy P.",
+    role: "Verified guest",
+    image: "https://picsum.photos/seed/guest-1/200/200",
+    quote: "A wonderful stay. The property was comfortable and the experience was smooth.",
+    order: 1,
+    isPublished: true,
+    isPlaceholder: true
+  },
+  {
+    name: "Michael C.",
+    role: "Verified guest",
+    image: "https://picsum.photos/seed/guest-2/200/200",
+    quote: "Great accommodation and a convenient location. I would stay again.",
+    order: 2,
+    isPublished: true,
+    isPlaceholder: true
+  },
+  {
+    name: "Isabella G.",
+    role: "Verified guest",
+    image: "https://picsum.photos/seed/guest-3/200/200",
+    quote: "A comfortable property and an enjoyable stay.",
+    order: 3,
+    isPublished: true,
+    isPlaceholder: true
+  },
+  {
+    name: "Guest Four",
+    role: "Guest",
+    image: "https://picsum.photos/seed/guest-4/200/200",
+    quote: "Sample testimonial awaiting approved guest feedback.",
+    order: 4,
+    isPublished: false,
+    isPlaceholder: true
+  },
+  {
+    name: "Guest Five",
+    role: "Guest",
+    image: "https://picsum.photos/seed/guest-5/200/200",
+    quote: "Sample testimonial awaiting approved guest feedback.",
+    order: 5,
+    isPublished: false,
+    isPlaceholder: true
+  },
+  {
+    name: "Guest Six",
+    role: "Guest",
+    image: "https://picsum.photos/seed/guest-6/200/200",
+    quote: "Sample testimonial awaiting approved guest feedback.",
+    order: 6,
+    isPublished: false,
+    isPlaceholder: true
+  }
+];
+
+const serviceCards = [
+  {
+    title: "Curated Stays",
+    text: "Thoughtfully selected accommodation for your next stay.",
+    order: 1,
+    isPublished: true
+  },
+  {
+    title: "Comfort & Convenience",
+    text: "Enjoy practical amenities designed to make your stay comfortable.",
+    order: 2,
+    isPublished: true
+  },
+  {
+    title: "Reliable Support",
+    text: "Our team is available to help with your accommodation enquiries.",
+    order: 3,
+    isPublished: true
+  }
+];
+
+module.exports = { properties, testimonials, serviceCards };
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\middleware\adminAuth.middleware.js ==========
+
+
+const jwt = require("jsonwebtoken");
+const AdminUser = require("../models/AdminUser");
+
+exports.requireAdmin = async (req, res, next) => {
+  try {
+    const header = req.headers.authorization;
+
+    if (!header || !header.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "AUTHENTICATION_REQUIRED",
+          message: "Admin authentication is required.",
+        },
+      });
+    }
+
+    if (!process.env.ADMIN_JWT_SECRET) {
+      throw new Error("ADMIN_JWT_SECRET is not configured.");
+    }
+
+    const token = header.slice(7);
+
+    const payload = jwt.verify(token, process.env.ADMIN_JWT_SECRET, {
+      issuer: "avanta-living-api",
+      audience: "avanta-living-admin",
+    });
+
+    if (payload.role !== "admin" || !payload.sub) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_ADMIN_TOKEN",
+          message: "Invalid admin token.",
+        },
+      });
+    }
+
+    const admin = await AdminUser.findOne({
+      _id: payload.sub,
+      role: "admin",
+      isActive: true,
+    }).select("_id name email role");
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "ADMIN_UNAVAILABLE",
+          message: "Admin account is unavailable.",
+        },
+      });
+    }
+
+    req.admin = admin;
+    next();
+  } catch (error) {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError" ||
+      error.name === "NotBeforeError"
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_ADMIN_TOKEN",
+          message: "Admin token is invalid or expired.",
+        },
+      });
+    }
+
+    next(error);
+  }
+};
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\middleware\errorHandler.js ==========
+
+function notFoundHandler(req, res, next) {
+  res.status(404).json({
+    error: {
+      code: "ROUTE_NOT_FOUND",
+      message: `Route ${req.method} ${req.originalUrl} was not found.`,
+    },
+  });
+}
+
+function errorHandler(err, req, res, next) {
+  const statusCode = err.statusCode || err.status || 500;
+
+  if (statusCode >= 500) {
+    console.error(err);
+  }
+
+  res.status(statusCode).json({
+    error: {
+      code: err.code || "INTERNAL_SERVER_ERROR",
+      message:
+        statusCode >= 500
+          ? "An unexpected server error occurred."
+          : err.message || "Request failed.",
+      ...(err.fields ? { fields: err.fields } : {}),
+    },
+  });
+}
+
+module.exports = {
+  notFoundHandler,
+  errorHandler,
+};
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\AdminUser.js ==========
+
+
+const mongoose = require("mongoose");
+
+const adminUserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 150 },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    passwordHash: { type: String, required: true, select: false },
+    role: {
+      type: String,
+      enum: ["admin"],
+      default: "admin",
+    },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: null },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("AdminUser", adminUserSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\Booking.js ==========
+
+
+const mongoose = require("mongoose");
+
+const guestSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    dialCode: { type: String, default: "+61" },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    address2: { type: String, default: "" },
+    city: { type: String, required: true, trim: true },
+    zip: { type: String, required: true, trim: true },
+    state: { type: String, default: "" },
+    country: { type: String, required: true, trim: true },
+    message: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const nightlyPriceSchema = new mongoose.Schema(
+  {
+    date: { type: Date, required: true },
+    amount: { type: Number, required: true, min: 0 },
+    rule: { type: String, default: "base" },
+  },
+  { _id: false }
+);
+
+const priceBreakdownSchema = new mongoose.Schema(
+  {
+    nightlyPrices: { type: [nightlyPriceSchema], default: [] },
+    accommodationSubtotal: { type: Number, required: true, min: 0 },
+    cleaningFee: { type: Number, default: 0, min: 0 },
+    additionalFees: {
+      type: [
+        {
+          name: { type: String, required: true },
+          amount: { type: Number, required: true, min: 0 },
+        },
+      ],
+      default: [],
+    },
+    taxes: {
+      type: [
+        {
+          name: { type: String, required: true },
+          amount: { type: Number, required: true, min: 0 },
+        },
+      ],
+      default: [],
+    },
+    discount: { type: Number, default: 0, min: 0 },
+    total: { type: Number, required: true, min: 0 },
+    currency: { type: String, default: "AUD", uppercase: true },
+    pricingVersion: { type: String, default: "1" },
+  },
+  { _id: false }
+);
+
+const bookingSchema = new mongoose.Schema(
+  {
+    reference: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+      index: true,
+    },
+    propertyId: { type: String, required: true, index: true },
+    guest: { type: guestSchema, required: true },
+    checkin: { type: Date, required: true },
+    checkout: { type: Date, required: true },
+    nights: { type: Number, required: true, min: 1 },
+    guests: { type: Number, required: true, min: 1 },
+    priceBreakdown: { type: priceBreakdownSchema, required: true },
+    status: {
+      type: String,
+      enum: ["pending", "confirmed", "cancelled", "expired", "completed"],
+      default: "pending",
+      index: true,
+    },
+    payment: {
+      provider: { type: String, default: "stripe" },
+      sessionId: { type: String, default: null },
+      paymentIntentId: { type: String, default: null },
+      status: {
+        type: String,
+        enum: ["unpaid", "pending", "paid", "failed", "refunded", "partially_refunded"],
+        default: "unpaid",
+      },
+      paidAt: { type: Date, default: null },
+      refundedAmount: { type: Number, default: 0, min: 0 },
+    },
+    holdExpiresAt: { type: Date, default: null, index: true },
+    cancellation: {
+      cancelledAt: { type: Date, default: null },
+      reason: { type: String, default: "" },
+      refundAmount: { type: Number, default: 0, min: 0 },
+    },
+    source: { type: String, default: "website" },
+  },
+  { timestamps: true }
+);
+
+bookingSchema.index({ property: 1, checkin: 1, checkout: 1, status: 1 });
+bookingSchema.index({ "guest.email": 1, createdAt: -1 });
+bookingSchema.index({ "payment.sessionId": 1 }, { sparse: true });
+
+module.exports = mongoose.model("Booking", bookingSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\Inquiry.js ==========
+
+
+const mongoose = require("mongoose");
+
+const guestSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, required: true, trim: true, maxlength: 100 },
+    lastName: { type: String, required: true, trim: true, maxlength: 100 },
+    email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
+    dialCode: { type: String, default: "+61", trim: true },
+    phone: { type: String, required: true, trim: true, maxlength: 30 },
+    city: { type: String, required: true, trim: true, maxlength: 100 },
+    state: { type: String, default: "", trim: true, maxlength: 100 },
+    country: { type: String, required: true, trim: true, maxlength: 100 },
+    message: { type: String, default: "", trim: true, maxlength: 3000 },
+  },
+  { _id: false }
+);
+
+const inquirySchema = new mongoose.Schema(
+  {
+    property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+      index: true,
+    },
+    propertyId: { type: String, required: true, index: true },
+    guest: { type: guestSchema, required: true },
+    checkin: { type: Date, default: null },
+    checkout: { type: Date, default: null },
+    guests: { type: Number, required: true, min: 1 },
+    marketingOptIn: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["new", "contacted", "converted", "closed"],
+      default: "new",
+      index: true,
+    },
+    ip: { type: String, default: null },
+    userAgent: { type: String, default: null },
+    notes: { type: String, default: "", maxlength: 5000 },
+    emailStatus: {
+      type: String,
+      enum: ["pending", "sent", "failed"],
+      default: "pending",
+    },
+  },
+  { timestamps: true }
+);
+
+inquirySchema.index({ createdAt: -1 });
+
+module.exports = mongoose.model("Inquiry", inquirySchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\OwnerLead.js ==========
+
+
+const mongoose = require("mongoose");
+
+const ownerLeadSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 200 },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    phone: { type: String, required: true, trim: true, maxlength: 30 },
+    propertyAddress: { type: String, required: true, trim: true, maxlength: 500 },
+    suburb: { type: String, default: "", trim: true, maxlength: 100 },
+    bedrooms: { type: Number, min: 0, default: null },
+    message: { type: String, default: "", trim: true, maxlength: 3000 },
+    status: {
+      type: String,
+      enum: ["new", "contacted", "qualified", "closed"],
+      default: "new",
+      index: true,
+    },
+    notes: { type: String, default: "", maxlength: 5000 },
+    emailStatus: {
+      type: String,
+      enum: ["pending", "sent", "failed"],
+      default: "pending",
+    },
+  },
+  { timestamps: true }
+);
+
+ownerLeadSchema.index({ createdAt: -1 });
+
+module.exports = mongoose.model("OwnerLead", ownerLeadSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\Property.js ==========
+
+
+const mongoose = require("mongoose");
+
+const imageSchema = new mongoose.Schema(
+  {
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    publicId: {
+      type: String,
+      default: null,
+    },
+    alt: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    order: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
+const amenityGroupSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    items: {
+      type: [String],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
+const seasonalRateSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    nightlyRate: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
+const additionalFeeSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    calculation: {
+      type: String,
+      enum: ["fixed_per_booking", "per_night", "per_guest_per_night"],
+      default: "fixed_per_booking",
+    },
+    taxable: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
+
+const taxSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    rate: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+    appliesTo: {
+      type: [String],
+      enum: ["accommodation", "cleaning", "additional_fees"],
+      default: ["accommodation"],
+    },
+  },
+  { _id: false }
+);
+
+const pricingSchema = new mongoose.Schema(
+  {
+    nightlyRate: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    cleaningFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    minNights: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    currency: {
+      type: String,
+      default: "AUD",
+      uppercase: true,
+      trim: true,
+    },
+    weekendRates: {
+      // JavaScript day numbers: Sunday = 0, Saturday = 6.
+      type: [
+        {
+          dayOfWeek: {
+            type: Number,
+            required: true,
+            min: 0,
+            max: 6,
+          },
+          nightlyRate: {
+            type: Number,
+            required: true,
+            min: 0,
+          },
+        },
+      ],
+      default: [],
+    },
+    seasonalRates: {
+      type: [seasonalRateSchema],
+      default: [],
+    },
+    taxes: {
+      type: [taxSchema],
+      default: [],
+    },
+    additionalFees: {
+      type: [additionalFeeSchema],
+      default: [],
+    },
+    pricingNotes: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+const cancellationRuleSchema = new mongoose.Schema(
+  {
+    daysBeforeArrival: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    refundPercentage: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+  },
+  { _id: false }
+);
+
+const cancellationPolicySchema = new mongoose.Schema(
+  {
+    rules: {
+      type: [cancellationRuleSchema],
+      default: [
+        { daysBeforeArrival: 14, refundPercentage: 100 },
+        { daysBeforeArrival: 7, refundPercentage: 50 },
+      ],
+    },
+    notes: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false }
+);
+
+const propertySchema = new mongoose.Schema(
+  {
+    // Stable ID used by existing frontend URLs, e.g. "441841".
+    propertyId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      match: /^[a-zA-Z0-9_-]+$/,
+    },
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
+
+    location: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    city: {
+      type: String,
+      default: "Sydney",
+      trim: true,
+    },
+
+    state: {
+      type: String,
+      default: "NSW",
+      trim: true,
+    },
+
+    country: {
+      type: String,
+      default: "Australia",
+      trim: true,
+    },
+
+    description: {
+      type: [String],
+      default: [],
+    },
+
+    images: {
+      type: [imageSchema],
+      default: [],
+    },
+
+    guests: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    bedrooms: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    bathrooms: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    amenities: {
+      type: [String],
+      default: [],
+    },
+
+    amenityGroups: {
+      type: [amenityGroupSchema],
+      default: [],
+    },
+
+    pricing: {
+      type: pricingSchema,
+      default: () => ({}),
+    },
+
+    cancellationPolicy: {
+      type: cancellationPolicySchema,
+      default: () => ({}),
+    },
+
+    houseRules: {
+      type: [String],
+      default: [],
+    },
+
+    checkInTime: {
+      type: String,
+      default: "15:00",
+    },
+
+    checkOutTime: {
+      type: String,
+      default: "10:00",
+    },
+
+    timezone: {
+      type: String,
+      default: "Australia/Sydney",
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    isPlaceholder: {
+      type: Boolean,
+      default: false,
+    },
+
+    sortOrder: {
+      type: Number,
+      default: 0,
+    },
+
+    pricingConfigured: {
+      type: Boolean,
+      default: false,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminUser",
+      default: null,
+    },
+
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminUser",
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret.propertyId;
+        delete ret._id;
+        delete ret.__v;
+        delete ret.propertyId;
+        return ret;
+      },
+    },
+  }
+);
+
+propertySchema.index({ isActive: 1, isFeatured: 1, sortOrder: 1 });
+propertySchema.index({ bedrooms: 1, guests: 1 });
+propertySchema.index({ rating: -1 });
+
+module.exports = mongoose.model("Property", propertySchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\ServiceCard.js ==========
+
+
+const mongoose = require("mongoose");
+
+const serviceCardSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    text: { type: String, required: true, trim: true },
+    order: { type: Number, default: 0 },
+    isPublished: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+serviceCardSchema.index({ isPublished: 1, order: 1 });
+
+module.exports = mongoose.model("ServiceCard", serviceCardSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\SiteSettings.js ==========
+
+
+const mongoose = require("mongoose");
+
+const siteSettingSchema = new mongoose.Schema(
+  {
+    siteName: {
+      type: String,
+      default: "Avanta Living",
+      trim: true,
+      maxlength: 150,
+    },
+    contactEmail: {
+      type: String,
+      default: "Hello.avantaliving@gmail.com",
+      trim: true,
+      lowercase: true,
+      maxlength: 254,
+    },
+    contactPhone: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 30,
+    },
+    address: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
+    currency: {
+      type: String,
+      enum: ["AUD", "USD", "INR", "GBP", "EUR", "NZD"],
+      default: "AUD",
+    },
+    timezone: {
+      type: String,
+      default: "Australia/Sydney",
+      trim: true,
+      maxlength: 100,
+    },
+    checkInTime: {
+      type: String,
+      default: "15:00",
+      match: /^([01]\d|2[0-3]):[0-5]\d$/,
+    },
+    checkOutTime: {
+      type: String,
+      default: "10:00",
+      match: /^([01]\d|2[0-3]):[0-5]\d$/,
+    },
+    defaultMinNights: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 365,
+    },
+    cancellationPolicyNotes: {
+      type: String,
+      default: "",
+      maxlength: 5000,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminUser",
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("SiteSetting", siteSettingSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\models\Testimonial.js ==========
+
+
+const mongoose = require("mongoose");
+
+const testimonialSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    role: { type: String, default: "Verified guest", trim: true },
+    image: { type: String, default: "" },
+    quote: { type: String, required: true, trim: true },
+    order: { type: Number, default: 0 },
+    isPublished: { type: Boolean, default: true },
+    isPlaceholder: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+testimonialSchema.index({ isPublished: 1, order: 1 });
+
+module.exports = mongoose.model("Testimonial", testimonialSchema);
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\admin.routes.js ==========
+
+
+const express = require("express");
+const router = express.Router();
+
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getDashboard,
+} = require("../controller/adminDashboard.controller");
+
+router.get("/me", requireAdmin, (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: { admin: req.admin },
+  });
+});
+
+router.get("/dashboard", requireAdmin, getDashboard);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminAuth.routes.js ==========
+
+
+const express = require("express");
+const router = express.Router();
+const { login } = require("../controller/adminAuth.controller");
+
+router.post("/login", login);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminAvailability.routes.js ==========
+
+
+const express = require("express");
+const router = express.Router();
+
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getAvailability,
+  createBlock,
+  deleteBlock,
+} = require("../controller/adminAvailability.controller");
+
+router.use(requireAdmin);
+
+router.get("/", getAvailability);
+router.post("/blocks", createBlock);
+router.delete("/blocks/:id", deleteBlock);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminBooking.routes.js ==========
+
+
+const express = require("express");
+const router = express.Router();
+
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getBookings,
+  getBooking,
+  updateBookingStatus,
+} = require("../controller/adminBookingController");
+
+router.use(requireAdmin);
+
+router.get("/", getBookings);
+router.get("/:id", getBooking);
+router.patch("/:id/status", updateBookingStatus);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminInquiry.routes.js ==========
+
+
+const express = require("express");
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getInquiries,
+  getInquiry,
+  updateInquiry,
+} = require("../controller/adminInquiry.controller");
+
+const router = express.Router();
+
+router.use(requireAdmin);
+
+router.get("/", getInquiries);
+router.get("/:id", getInquiry);
+router.patch("/:id", updateInquiry);
+
+module.exports = router;
+        
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminProperty.routes.js ==========
+
+
+const express = require("express");
+const router = express.Router();
+
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getProperties,
+  getProperty,
+  createProperty,
+  updateProperty,
+  toggleProperty,
+  deleteProperty,
+} = require("../controller/adminProperty.controller");
+
+router.use(requireAdmin);
+
+router.get("/", getProperties);
+router.get("/:id", getProperty);
+router.post("/", createProperty);
+router.patch("/:id", updateProperty);
+router.patch("/:id/status", toggleProperty);
+router.delete("/:id", deleteProperty);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminPropertyUpload.routes.js ==========
+
+
+const express = require("express");
+const multer = require("multer");
+
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  uploadImage,
+} = require("../controller/adminImageUpload.controller");
+
+const router = express.Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter: (req, file, callback) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return callback(new Error("Only image files are allowed."));
+    }
+
+    callback(null, true);
+  },
+});
+
+router.post("/upload-image", requireAdmin, upload.single("image"), uploadImage);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\adminSettings.routes.js ==========
+
+
+const express = require("express");
+const { requireAdmin } = require("../middleware/adminAuth.middleware");
+const {
+  getSettings,
+  updateSettings,
+} = require("../controller/adminSettings.controller");
+
+const router = express.Router();
+
+router.use(requireAdmin);
+
+router.get("/", getSettings);
+router.patch("/", updateSettings);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\availability.routes.js ==========
+
+
+const express = require("express");
+const {
+  checkAvailability,
+} = require("../controller/availability.controller");
+
+const router = express.Router();
+
+router.get("/:propertyId", checkAvailability);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\booking.routes.js ==========
+
+const express = require('express')
+const router = express.Router()
+const { createBooking } = require('../controller/booking.controller')
+
+router.post('/', createBooking)
+
+module.exports = router
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\contact.routes.js ==========
+
+const express = require("express");
+const { submitContact } = require("../controller/contact.controller");
+
+const router = express.Router();
+
+router.post("/", submitContact);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\health.routes.js ==========
+
+const express = require("express");
+const { getDatabaseStatus } = require("../config/database");
+
+const router = express.Router();
+
+router.get("/", (req, res) => {
+  const database = getDatabaseStatus();
+
+  res.status(200).json({
+    data: {
+      status: "ok",
+      service: "Avanta Living API",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "development",
+      database,
+    },
+  });
+});
+
+module.exports = router;
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\inquiry.routes.js ==========
+
+
+const express = require("express");
+const { createInquiry } = require("../controller/inquiry.controller");
+
+const router = express.Router();
+
+router.post("/", createInquiry);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\payment.routes.js ==========
+
+
+const express = require('express')
+const router = express.Router()
+
+const {
+  createCheckoutSession,
+  getCheckoutStatus,
+} = require('../controller/payment.controller')
+
+const {
+    handleStripeWebhook
+} = require("../controller/paymentWebhook.controller")
+
+router.get('/session/:sessionId', getCheckoutStatus)
+
+router.post('/checkout-session', createCheckoutSession)
+router.post(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  handleStripeWebhook
+)
+
+module.exports = router
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\pricing.routes.js ==========
+
+const express = require("express");
+const { getQuote } = require("../controller/pricing.controller");
+
+const router = express.Router();
+
+router.get("/:propertyId/quote", getQuote);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\property.routes.js ==========
+
+
+const express = require("express");
+const { 
+    getProperties,
+    getPropertyById,
+} = require("../controller/property.controller");
+
+const router = express.Router();
+
+router.get("/", getProperties);
+router.get("/:id", getPropertyById);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\PropertyAssessment.routes.js ==========
+
+const express = require('express')
+const router = express.Router()
+
+const {
+  createPropertyAssessment,
+} = require('../controller/PropertyAssessment.controller')
+
+router.post('/', createPropertyAssessment)
+
+module.exports = router
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\service.routes.js ==========
+
+
+const express = require("express");
+const {
+  getServices
+} = require("../controller/service.controller");
+
+const router = express.Router();
+
+router.get("/", getServices);
+
+module.exports = router;
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\stripeWebhook.routes.js ==========
+
+
+const express = require('express')
+const router = express.Router()
+
+const {
+  handleStripeWebhook,
+} = require('../controller/paymentWebhook.controller')
+
+router.post(
+  '/',
+  express.raw({ type: 'application/json' }),
+  handleStripeWebhook
+)
+
+module.exports = router
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\routes\testimonial.routes.js ==========
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\server.js ==========
+
+require("dotenv").config();
+
+const app = require("./app");
+const { connectDatabase } = require("./config/database");
+
+const PORT = Number(process.env.PORT) || 5000;
+
+async function startServer() {
+  try {
+    await connectDatabase();
+  } catch {
+    console.error(
+      "The API will not start because the configured database connection failed."
+    );
+    process.exit(1);
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`Avanta Living API running at http://localhost:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/api/health`);
+  });
+
+  function shutdown(signal) {
+    console.log(`${signal} received. Shutting down...`);
+
+    server.close(() => {
+      console.log("HTTP server closed.");
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error("Graceful shutdown timed out.");
+      process.exit(1);
+    }, 10000).unref();
+  }
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+}
+
+startServer();
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\src\utils\pricing.js ==========
+
+
+
+========== FILE: D:\IDEs\cozy-escapes\api\test-weekend-pricing.js ==========
+
+
+const { calculateQuote } = require("./src/utils/pricing");
+
+const testProperty = {
+  propertyId: "TEST-SEASONAL",
+  guests: 4,
+  isActive: true,
+  isPlaceholder: false,
+  pricingConfigured: true,
+
+  pricing: {
+    nightlyRate: 200,
+    cleaningFee: 100,
+    minNights: 1,
+    currency: "AUD",
+
+    // Saturday = 6, Sunday = 0
+    weekendRates: [
+      { dayOfWeek: 6, nightlyRate: 250 },
+      { dayOfWeek: 0, nightlyRate: 250 },
+    ],
+
+    seasonalRates: [
+      {
+        name: "Summer Test",
+        startDate: new Date("2026-11-14T00:00:00.000Z"),
+        endDate: new Date("2026-11-15T00:00:00.000Z"),
+        nightlyRate: 300,
+      },
+    ],
+
+    additionalFees: [
+      {
+        name: "Extra Service",
+        amount: 50,
+        calculation: "fixed_per_booking",
+        taxable: true,
+      },
+    ],
+
+    taxes: [
+      {
+        name: "Test Tax",
+        rate: 10,
+        appliesTo: [
+          "accommodation",
+          "cleaning",
+          "additional_fees",
+        ],
+      },
+    ],
+  },
+};
+
+try {
+  const quote = calculateQuote(
+    testProperty,
+    new Date("2026-11-13T00:00:00.000Z"),
+    new Date("2026-11-16T00:00:00.000Z"),
+    2
+  );
+
+  console.log("PRICING TEST RESULT:");
+  console.log(JSON.stringify(quote, null, 2));
+} catch (error) {
+  console.error("Pricing test failed:", error.message);
+  process.exitCode = 1;
+}
+
