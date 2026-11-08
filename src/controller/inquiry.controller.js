@@ -140,6 +140,14 @@ async function createInquiry(req, res, next) {
       errors.propertyId = "A valid property ID is required.";
     }
 
+    if (
+      body.propertyTitle !== undefined &&
+      (typeof body.propertyTitle !== "string" ||
+        body.propertyTitle.length > 200)
+    ) {
+      errors.propertyTitle = "Property title must be at most 200 characters.";
+    }
+
     if (!guest || typeof guest !== "object" || Array.isArray(guest)) {
       errors.guest = "Guest details are required.";
     }
@@ -231,22 +239,15 @@ async function createInquiry(req, res, next) {
       );
     }
 
+    const propertyId = body.propertyId.trim();
+
     const property = await Property.findOne({
-      propertyId: body.propertyId.trim(),
+      propertyId,
       isActive: true,
       isPlaceholder: false,
-    });
+    }).select("_id propertyId title guests");
 
-    if (!property) {
-      return sendError(
-        res,
-        404,
-        "PROPERTY_NOT_FOUND",
-        "This property is unavailable or could not be found."
-      );
-    }
-
-    if (guests > property.guests) {
+    if (property && guests > property.guests) {
       return sendError(
         res,
         400,
@@ -256,9 +257,16 @@ async function createInquiry(req, res, next) {
       );
     }
 
+    const propertyTitle =
+      property?.title ||
+      body.propertyTitle?.trim() ||
+      "Property enquiry";
+
     const inquiry = await Inquiry.create({
-      property: property._id,
-      propertyId: property.propertyId,
+      property: property?._id || null,
+      propertyId,
+      propertyTitle,
+      propertySource: property ? "local" : "guesty",
       guest: {
         firstName: guest.firstName.trim(),
         lastName: guest.lastName.trim(),
@@ -287,6 +295,7 @@ async function createInquiry(req, res, next) {
       data: {
         id: inquiry._id,
         propertyId: inquiry.propertyId,
+        propertyTitle: inquiry.propertyTitle,
         status: inquiry.status,
         emailStatus: inquiry.emailStatus,
         createdAt: inquiry.createdAt,
@@ -298,7 +307,7 @@ async function createInquiry(req, res, next) {
         inquiryId: inquiry._id,
         companyEmail,
         guestEmail: inquiry.guest.email,
-        propertyTitle: property.title,
+        propertyTitle: inquiry.propertyTitle,
         propertyId: inquiry.propertyId,
         guest: inquiry.guest,
         checkin: inquiry.checkin,

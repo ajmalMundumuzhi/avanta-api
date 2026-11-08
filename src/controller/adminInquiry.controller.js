@@ -2,6 +2,21 @@
 const mongoose = require("mongoose");
 const Inquiry = require("../models/Inquiry");
 
+function addPropertySnapshot(inquiry) {
+  const result = inquiry.toObject
+    ? inquiry.toObject()
+    : { ...inquiry };
+
+  if (!result.property) {
+    result.property = {
+      title: result.propertyTitle || "Property enquiry",
+      propertyId: result.propertyId,
+    };
+  }
+
+  return result;
+}
+
 exports.getInquiries = async (req, res, next) => {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
@@ -17,7 +32,10 @@ exports.getInquiries = async (req, res, next) => {
       if (!allowedStatuses.includes(req.query.status)) {
         return res.status(400).json({
           success: false,
-          error: { code: "INVALID_STATUS", message: "Invalid inquiry status." },
+          error: {
+            code: "INVALID_STATUS",
+            message: "Invalid inquiry status.",
+          },
         });
       }
 
@@ -35,6 +53,7 @@ exports.getInquiries = async (req, res, next) => {
         { "guest.email": regex },
         { "guest.phone": regex },
         { propertyId: regex },
+        { propertyTitle: regex },
       ];
 
       if (mongoose.isValidObjectId(search)) {
@@ -57,7 +76,7 @@ exports.getInquiries = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        inquiries,
+        inquiries: inquiries.map(addPropertySnapshot),
         pagination: {
           page,
           limit,
@@ -99,7 +118,9 @@ exports.getInquiry = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: { inquiry },
+      data: {
+        inquiry: addPropertySnapshot(inquiry),
+      },
     });
   } catch (error) {
     next(error);
@@ -180,7 +201,9 @@ exports.updateInquiry = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: { inquiry },
+      data: {
+        inquiry: addPropertySnapshot(inquiry),
+      },
     });
   } catch (error) {
     next(error);

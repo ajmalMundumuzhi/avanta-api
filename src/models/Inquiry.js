@@ -21,11 +21,30 @@ const inquirySchema = new mongoose.Schema(
     property: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Property",
-      required: true,
+      default: null,
       index: true,
     },
-    propertyId: { type: String, required: true, index: true },
-    guest: { type: guestSchema, required: true },
+    propertyId: {
+      type: String,
+      required: true,
+      index: true,
+      trim: true,
+    },
+    propertyTitle: {
+      type: String,
+      default: "Property enquiry",
+      trim: true,
+      maxlength: 200,
+    },
+    propertySource: {
+      type: String,
+      enum: ["local", "guesty"],
+      default: "guesty",
+    },
+    guest: {
+      type: guestSchema,
+      required: true,
+    },
     checkin: { type: Date, default: null },
     checkout: { type: Date, default: null },
     guests: { type: Number, required: true, min: 1 },
