@@ -23,7 +23,7 @@ const adminInquiryRoutes = require("./routes/adminInquiry.routes");
 const adminSettingsRoutes = require("./routes/adminSettings.routes");
 const adminPropertyUploadRoutes = require("./routes/adminPropertyUpload.routes");
 const contactRoutes = require("./routes/contact.routes");
-const propertyAssessmentRoutes = require('./routes/PropertyAssessment.routes')
+const propertyAssessmentRoutes = require("./routes/PropertyAssessment.routes");
 const guestyRoutes = require("./routes/guesty.routes");
 
 const {
@@ -32,23 +32,27 @@ const {
 } = require("./middleware/errorHandler");
 
 const app = express();
-app.set("trust proxy", 1);
 
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 app.use(helmet());
 
-const allowedOrigins = (
-  process.env.CLIENT_URL
-)
+const allowedOrigins = (process.env.CLIENT_URL || "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
   .filter(Boolean);
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.trim().replace(/\/+$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
@@ -90,6 +94,7 @@ app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/pricing", pricingRoutes);
 app.use("/api/bookings", bookingRoutes);
+
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/properties", adminPropertyRoutes);
@@ -97,10 +102,12 @@ app.use("/api/admin/bookings", adminBookingRoutes);
 app.use("/api/admin/availability", adminAvailabilityRoutes);
 app.use("/api/admin/inquiries", adminInquiryRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
+
 app.use("/api/admin/properties", adminPropertyUploadRoutes);
+
 app.use("/api/contact", contactRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use('/api/property-assessments', propertyAssessmentRoutes)
+app.use("/api/property-assessments", propertyAssessmentRoutes);
 app.use("/api/guesty", guestyRoutes);
 
 app.use(notFoundHandler);
