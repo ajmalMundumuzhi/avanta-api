@@ -92,7 +92,7 @@ async function sendInquiryEmails({
   const emailResults = await Promise.allSettled([
     sendEmail({
       to: companyEmail,
-      subject: `New property inquiry — ${propertyTitle}`,
+      subject: "Stay Enquiry",
       text: companyText,
     }),
     sendEmail({
