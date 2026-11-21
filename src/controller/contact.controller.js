@@ -68,7 +68,7 @@ async function submitContact(req, res, next) {
       sendEmail({
         to: recipient,
         replyTo: cleanEmail,
-        subject: `Website contact: ${cleanSubject}`,
+        subject: "Stay Enquiry",
         text: [
           "A new contact form message was received.",
           "",

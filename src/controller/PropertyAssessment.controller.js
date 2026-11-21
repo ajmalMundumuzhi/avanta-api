@@ -274,7 +274,7 @@ async function createPropertyAssessment(req, res, next) {
 
     const companyResult = await sendEmail({
       to: companyEmail,
-      subject: `New Property Assessment — ${assessment.firstName} ${assessment.lastName}`,
+      subject: "Property Assessment",
       text: buildCompanyEmail(assessment),
       replyTo: assessment.email,
     });
